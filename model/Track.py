@@ -9,44 +9,68 @@ DEFAULT_PATH = "/Users/anton/projects/playlist"
 DEFAULT_CONFIG_FILE = ".config.json"
 
 
-ArtistName = Annotated[str, BeforeValidator(lambda artistList:
-                                            "".join([x.get('name') for x in artistList]) if type(artistList) is list else artistList)]
+def artistNameValidator(value) -> list:
+    # Handle case for
+    # - Spotify & YouTube(when `x` is list).
+    # - case for previously exported obj via self.__dict__(when `x` isn't a dict str)
+    if type(value) is list:
+        return [x.get('name') if type(x) is dict else x for x in value]
+    # Handle case for LastFM.
+    elif type(value) is dict:
+        return [value.get("name")]
+    # Handle case for previously exported obj via self.__dict__
+
+
+
+ArtistName = Annotated[list, BeforeValidator(artistNameValidator)]
+
 ArtistId = Annotated[list, AfterValidator(lambda artistList:
                                                   [x.get('id') if type(x) is dict else x for x in artistList])]
-Duration = Annotated[int, BeforeValidator(lambda duration: round(duration / 1000) if duration > 1000 else duration)]
+Duration = Annotated[int, AfterValidator(lambda duration: round(duration / 1000) if duration > 1000 else duration)]
 
 
 class Track(BaseModel):
-
+    # TODO: needs a __hash__ method, so you could quickly check if track is in list of tracks.
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         # Special handling for ArtistId, so you could set it as `None` in method related to specific platform.
         if kwargs.get('spotifyArtistId', 0) is None:
             self.spotifyArtistId = None
-        elif kwargs.get('youtubeArtistId', 0) is None:
+        if kwargs.get('youtubeArtistId', 0) is None:
             self.youtubeArtistId = None
+        if kwargs.get('zeroDuration') is True:
+            self.duration = 0
 
 
     model_config = ConfigDict(populate_by_name=True)
 
-    # Since these are imported from youtube API - we can already match it with raw json fields.
+    # Choice alias to match title from raw youtube & spotify jsons.
     title: str | None = Field(validation_alias=AliasChoices("title", "name"))
-    artist: str | ArtistName | None = Field(alias="artists")
+    artists: ArtistName | None = Field(validation_alias=AliasChoices("artists", "artist"))
 
-    duration:  Duration | None = Field(validation_alias=AliasChoices("duration_seconds", "duration_ms"), default=None)
-    # duration_ms: int | None = Field(alias="duration_ms", default=None)
+    duration: Duration | None = Field(validation_alias=AliasChoices("duration_seconds", "duration_ms"), default=None)
 
-    youtubeArtistId: list | ArtistId | None = Field(alias="artists", default=None)
+    youtubeArtistId: ArtistId | None = Field(alias="artists", default=None)
     youtubeId: str | None = Field(alias="videoId", default=None)
 
     # Spotify is matched manually, so defaults to `None`.
     spotifyId: str | None = Field(alias="id", default=None)
-    spotifyArtistId: list | ArtistId | None = Field(alias="artists", default=None)
+    spotifyArtistId: ArtistId | None = Field(alias="artists", default=None)
 
     @classmethod
     def from_dict(cls, rawObject: dict) -> "Track":
         return cls(**rawObject)
+
+    @property
+    def artistName(self) -> str:
+        """Docstring for artistName"""
+        return " ".join(self.artists)
+
+    @property
+    def firstArtistName(self) -> str:
+        """Docstring for artistName"""
+        return self.artists[0]
 
 
 
