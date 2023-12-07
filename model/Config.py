@@ -7,7 +7,9 @@ DEFAULT_CONFIG_FILE = ".config.json"
 
 
 class Config(BaseModel):
-
+    """
+    useful doc-string
+    """
     def __init__(self, fileName: str = ""):
         """
         <useful doc-string>
@@ -49,4 +51,3 @@ class Config(BaseModel):
 
 if __name__ == "__main__":
     print(Config())
-
