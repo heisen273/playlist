@@ -1,5 +1,4 @@
-import json
-from pydantic import BaseModel, Field, ConfigDict, AliasChoices, ValidationInfo
+from pydantic import BaseModel, Field, ConfigDict, AliasChoices
 
 from pydantic.functional_validators import BeforeValidator, AfterValidator
 from typing_extensions import Annotated
@@ -30,7 +29,10 @@ Duration = Annotated[int, AfterValidator(lambda duration: round(duration / 1000)
 
 
 class Track(BaseModel):
-    # TODO: needs a __hash__ method, so you could quickly check if track is in list of tracks.
+    # TODO:
+    #  - needs a __hash__ method, so you could quickly check `if track is in list of tracks`.
+    #  - think whether it make sense splitting youtube & spotify Tracks in separate classes and introducing
+    #  new unitied one.
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -46,6 +48,7 @@ class Track(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     # Choice alias to match title from raw youtube & spotify jsons.
+    # Note: `first_choice` is always youtube, second is always spotify.
     title: str | None = Field(validation_alias=AliasChoices("title", "name"))
     artists: ArtistName | None = Field(validation_alias=AliasChoices("artists", "artist"))
 
@@ -71,7 +74,6 @@ class Track(BaseModel):
     def firstArtistName(self) -> str:
         """Docstring for artistName"""
         return self.artists[0]
-
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ class PlaylistGenerator:
 
     def __init__(self) -> None:
         # Init config.
-        self.config: Config = Config()
+        self.config: Config = Config(loadFromDisk=True)
 
         # Init youtube.
         self.youtube: YTMusic = YTMusic(self.config.youtubeAuthJson)
