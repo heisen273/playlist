@@ -21,5 +21,4 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Analysing the code with pylint
       run: |
-        #pylint --rcfile=.pylintrc $(git ls-files '*.py' | grep -v 'tests')
         pylint --fail-under=8 $(git ls-files '*.py' | grep -v 'tests')
