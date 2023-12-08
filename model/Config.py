@@ -1,21 +1,41 @@
 import json
-from pydantic import BaseModel
+import logging
+from pathlib import Path
+from pydantic import BaseModel, ConfigDict
 
 # TODO: Add these globals into file with constants.
 DEFAULT_PATH = "/Users/anton/projects/playlist"
 DEFAULT_CONFIG_FILE = ".config.json"
 
 
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
+logger: logging.Logger = logging.getLogger()
+
+
 class Config(BaseModel):
-    """
-    useful doc-string
-    """
-    def __init__(self, fileName: str = ""):
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    def __init__(self, filePath: str = "", fileName: str = "", loadFromDisk: bool = False, **kwargs):
+
         """
         <useful doc-string>
         """
-        # TODO: Add check `if file exists`.
-        with open(f"{DEFAULT_PATH}/{fileName or DEFAULT_CONFIG_FILE}") as f:
+
+        formattedPath: Path = Path(f"{filePath or DEFAULT_PATH}/{fileName or DEFAULT_CONFIG_FILE}")
+
+        # Early exit in case if:
+        # - not loading from disk.
+        if not loadFromDisk:
+            super().__init__(**kwargs)
+            return
+        # -it's not possible to load requested config.
+        elif not Path.exists(formattedPath):
+            logging.error(f"Requested config filepath does not exist: {formattedPath}")
+            super().__init__(**kwargs)
+            return
+
+        with open(formattedPath) as f:
             super().__init__(**json.load(f))
 
     # Playlists.
@@ -43,9 +63,9 @@ class Config(BaseModel):
     # Youtube credentials are loaded from .oauth.json file, so it's required to just store the filePath.
     youtubeAuthJson: str | None = None
 
-    def store(self, fileName: str = DEFAULT_CONFIG_FILE):
+    def store(self, filePath: str = DEFAULT_PATH, fileName: str = DEFAULT_CONFIG_FILE):
         """(Over)writes config into default path"""
-        with open(f"{DEFAULT_PATH}/{fileName}", "w") as f:
+        with open(f"{filePath}/{fileName}", "w") as f:
             json.dump(self.__dict__, f)
 
 
