@@ -32,8 +32,10 @@ rawConfig = {
     "spotifyClientSecret": "spotify_client_secret",
     "lastFMClientId": "lastfm_client_id",
     "lastFMClientSecret": "lastfm_client_secret",
-    "youtubeAuthJson": "path/to/youtube_auth.json"
+    "youtubeAuthJson": "path/to/youtube_auth.json",
+    "redirectUrl": "my.redirect",
 }
+
 
 def test_spotifyTrackParsing() -> None:
     """Test for parsing raw Spotify track"""
@@ -80,6 +82,7 @@ def test_configParsing() -> None:
     assert config.lastFMClientId == "lastfm_client_id"
     assert config.lastFMClientSecret == "lastfm_client_secret"
     assert config.youtubeAuthJson == "path/to/youtube_auth.json"
+    assert config.redirectUrl == "my.redirect"
 
 
 def test_configStoring(tmp_path: Path) -> None:
@@ -100,4 +103,4 @@ def test_configStoring(tmp_path: Path) -> None:
 
     # All other 9 keys are `None`
     assert not any(storedConfigData.values())
-    assert len(storedConfigData.values()) == 9
+    assert len(storedConfigData.values()) == 10

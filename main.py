@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 import random
 import pylast
@@ -15,18 +13,13 @@ from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 from model.Config import Config
 from model.Track import Track
 
-
-DEFAULT_PATH = "/Users/anton/projects/playlist"
-SPOTIFY_SCOPES: list[str] = ["user-library-read", "playlist-modify-public", "playlist-modify-private"]
-MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE: int = 5
-MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE: int = 100
+# Constants
+from constants import SPOTIFY_SCOPES, MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE, MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE
 
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
 logger: logging.Logger = logging.getLogger()
 
-# TODO: implement 'what I don't want to hear' functionality.
-blackList: list[str] = ["travis scott"]
 
 class PlaylistGenerator:
     """
@@ -48,7 +41,7 @@ class PlaylistGenerator:
                                        auth_manager=SpotifyOAuth(
                                            client_id=self.config.spotifyClientId,
                                            client_secret=self.config.spotifyClientSecret,
-                                           redirect_uri="http://localhost:3003/myredirect",
+                                           redirect_uri=self.config.redirectUrl,
                                            scope=SPOTIFY_SCOPES))
 
         # Init lastFM

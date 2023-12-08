@@ -4,10 +4,6 @@ from pydantic.functional_validators import BeforeValidator, AfterValidator
 from typing_extensions import Annotated
 
 
-DEFAULT_PATH = "/Users/anton/projects/playlist"
-DEFAULT_CONFIG_FILE = ".config.json"
-
-
 def artistNameValidator(value) -> list:
     # Handle case for
     # - Spotify & YouTube(when `x` is list).
@@ -18,7 +14,6 @@ def artistNameValidator(value) -> list:
     elif type(value) is dict:
         return [value.get("name")]
     # Handle case for previously exported obj via self.__dict__
-
 
 
 ArtistName = Annotated[list, BeforeValidator(artistNameValidator)]
