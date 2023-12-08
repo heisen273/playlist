@@ -1,5 +1,4 @@
-import json
-from pydantic import BaseModel, Field, ConfigDict, AliasChoices, ValidationInfo
+from pydantic import BaseModel, Field, ConfigDict, AliasChoices
 
 from pydantic.functional_validators import BeforeValidator, AfterValidator
 from typing_extensions import Annotated
@@ -30,6 +29,9 @@ Duration = Annotated[int, AfterValidator(lambda duration: round(duration / 1000)
 
 
 class Track(BaseModel):
+    """
+    useful doc-string
+    """
     # TODO: needs a __hash__ method, so you could quickly check if track is in list of tracks.
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
