@@ -46,5 +46,7 @@ jobs:
         # Write github secret to a file: app .config.json & youtube .oauth.json
         echo $env:CONFIG_JSON >> $GITHUB_WORKSPACE/.config.json
         echo $env:YOUTUBE_JSON >> $GITHUB_WORKSPACE/.oauth.json
+        
+        echo $GITHUB_WORKSPACE/.config.json
 
         pytest
