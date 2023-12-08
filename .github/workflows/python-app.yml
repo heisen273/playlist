@@ -49,4 +49,6 @@ jobs:
         
         echo $GITHUB_WORKSPACE/.config.json
 
+        cat $GITHUB_WORKSPACE/.config.json
+
         pytest
