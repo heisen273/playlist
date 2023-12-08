@@ -46,6 +46,7 @@ def test_spotifyTrackParsing() -> None:
     assert spotifyTrack.artists == ["Spotify Artist"]
     assert spotifyTrack.duration == 300  # seconds
 
+
 def test_youtubeTrackParsing() -> None:
     """Test for parsing raw YouTube track"""
     youtubeTrack = Track(**rawYoutubeTrack)
@@ -55,6 +56,7 @@ def test_youtubeTrackParsing() -> None:
     assert youtubeTrack.artists == ["YouTube Artist"]
     assert youtubeTrack.duration == 300  # seconds
 
+
 def test_trackTitleFormatting() -> None:
     """TODO: Test to make sure that if the artist name is in the title - it'll be excluded & nicely formatted."""
     rawTrackWithArtistInTitle = {
@@ -62,11 +64,12 @@ def test_trackTitleFormatting() -> None:
         "artists": [{"name": "Artist"}]
     }
 
-    formatted_track = Track(**rawTrackWithArtistInTitle)
+    track = Track(**rawTrackWithArtistInTitle)
 
     # FIXME:
-    # assert formatted_track.formatted_title == "Track"
-    assert formatted_track.artists == ["Artist"]
+    # assert track.formatted_title == "Track"
+    assert track.artists == ["Artist"]
+
 
 def test_configParsing() -> None:
     """Test for parsing config JSON"""
