@@ -43,13 +43,13 @@ jobs:
       env:
         CONFIG_JSON: ${{ secrets.CONFIG_JSON }}
         YOUTUBE_JSON: ${{ secrets.YOUTUBE_JSON }}
-        SPOTIFY_JSON: ${{ secrets.$SPOTIFY_JSON }}
+        SPOTIFY_JSON: ${{ secrets.SPOTIFY_JSON }}
       run: |
         # Write github secret to a file: app .config.json & youtube .oauth.json
         eval "echo $CONFIG_JSON" >> $GITHUB_WORKSPACE/.config.json
         eval "echo $YOUTUBE_JSON" >> $GITHUB_WORKSPACE/.oauth.json
-        echo $SPOTIFY_JSON >> $GITHUB_WORKSPACE/.spotify_cache
-        echo $SPOTIFY_JSON >> $GITHUB_WORKSPACE/tests/.spotify_cache
+        eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/.spotify_cache
+        eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/tests/.spotify_cache
       
         cat $GITHUB_WORKSPACE/.spotify_cache
 
