@@ -29,10 +29,12 @@ Duration = Annotated[int, AfterValidator(lambda duration: round(duration / 1000)
 
 
 class Track(BaseModel):
+
     # TODO:
     #  - needs a __hash__ method, so you could quickly check `if track is in list of tracks`.
     #  - think whether it make sense splitting youtube & spotify Tracks in separate classes and introducing
     #  new unitied one.
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

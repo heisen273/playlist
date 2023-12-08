@@ -17,6 +17,7 @@ class Config(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     def __init__(self, filePath: str = "", fileName: str = "", loadFromDisk: bool = False, **kwargs):
+
         """
         <useful doc-string>
         """
@@ -70,4 +71,3 @@ class Config(BaseModel):
 
 if __name__ == "__main__":
     print(Config())
-

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import logging
-
+import random
 import pylast
 import requests
-from requests import Response
-import random
 from more_itertools import chunked
 
 # Integrations
