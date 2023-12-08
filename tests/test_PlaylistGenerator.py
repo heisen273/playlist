@@ -1,3 +1,5 @@
+import pytest
+
 import main
 from model.Track import Track
 
@@ -34,6 +36,16 @@ def test_fillSpotifyId():
     tracks[0].youtubeArtistId = None
     tracks[0].spotifyId = None
     tracks[0].spotifyArtistId = None
+
+
+    import logging
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
+    logger: logging.Logger = logging.getLogger()
+    with open("/Users/runner/work/playlist/playlist/.spotify_cache") as f:
+        a = f.read()
+    logger.error(a)
+    logger.error(123123)
+    logger.error(f"123123, {a}")
 
     # Fill spotify ids.
     generator.fillSpotifyId(tracks)
@@ -108,7 +120,6 @@ def test_youtubeRecommendations() -> None:
 
     assert not recommendedTrack.spotifyId
     assert not recommendedTrack.spotifyArtistId
-
 
 
 def test_getLastSpotifyTracks():

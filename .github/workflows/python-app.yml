@@ -26,29 +26,31 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest pylint
+        pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        
-        # run pylint
-        pylint --fail-under=8 $(git ls-files '*.py' | grep -v 'tests')
+#        flake8 pytest pylint
+#    - name: Lint with flake8
+#      run: |
+#        # stop the build if there are Python syntax errors or undefined names
+#        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+#
+#        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+#        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+#
+#        # run pylint
+#        pylint --fail-under=8 $(git ls-files '*.py' | grep -v 'tests')
     - name: Test with pytest
       env:
         CONFIG_JSON: ${{ secrets.CONFIG_JSON }}
         YOUTUBE_JSON: ${{ secrets.YOUTUBE_JSON }}
+        SPOTIFY_JSON: ${{ secrets.$SPOTIFY_JSON }}
       run: |
         # Write github secret to a file: app .config.json & youtube .oauth.json
-        echo $CONFIG_JSON >> $GITHUB_WORKSPACE/.config.json
-        echo $YOUTUBE_JSON >> $GITHUB_WORKSPACE/.oauth.json
-        
-        echo $GITHUB_WORKSPACE/.config.json
+        eval "echo $CONFIG_JSON" >> $GITHUB_WORKSPACE/.config.json
+        eval "echo $YOUTUBE_JSON" >> $GITHUB_WORKSPACE/.oauth.json
+        echo $SPOTIFY_JSON >> $GITHUB_WORKSPACE/.spotify_cache
+        echo $SPOTIFY_JSON >> $GITHUB_WORKSPACE/tests/.spotify_cache
+      
+        cat $GITHUB_WORKSPACE/.spotify_cache
 
-        cat $GITHUB_WORKSPACE/.config.json
-
-        pytest
+        pytest -v

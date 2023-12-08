@@ -6,6 +6,7 @@ from more_itertools import chunked
 
 # Integrations
 import spotipy
+from spotipy import CacheHandler, CacheFileHandler
 from ytmusicapi import YTMusic
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 
@@ -37,12 +38,16 @@ class PlaylistGenerator:
         # Init spotify.
         spotifyCredentials = SpotifyClientCredentials(client_id=self.config.spotifyClientId,
                                                       client_secret=self.config.spotifyClientSecret)
+
         self.spotify = spotipy.Spotify(client_credentials_manager=spotifyCredentials,
                                        auth_manager=SpotifyOAuth(
+                                           open_browser=False,
                                            client_id=self.config.spotifyClientId,
                                            client_secret=self.config.spotifyClientSecret,
                                            redirect_uri=self.config.redirectUrl,
-                                           scope=SPOTIFY_SCOPES))
+                                           scope=SPOTIFY_SCOPES,
+                                           cache_handler=CacheFileHandler(cache_path=".spotify_cache"))
+                                       )
 
         # Init lastFM
         self.lastfm = pylast.LastFMNetwork(api_key=self.config.lastFMClientId, api_secret=self.config.lastFMClientSecret)
