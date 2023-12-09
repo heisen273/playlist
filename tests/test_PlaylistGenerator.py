@@ -1,7 +1,17 @@
 import main
 from model.Track import Track
 
-rawTracks: list[dict] = [{'title': 'Runaway', 'artists': ['Kanye West'], 'duration': 548, 'youtubeArtistId': ['UCRY5dYsbIN5TylSbd7gVnZg'], 'youtubeId': 'VhEoCOWUtcU', 'spotifyId': '3DK6m7It6Pw857FcQftMds', 'spotifyArtistId': ['5K4W6rqBFWDnAN6FQUkS6x', '0ONHkAv9pCAFxb0zJwDNTy']}]
+rawTracks: list[dict] = [
+    {
+        "title": "Runaway",
+        "artists": ["Kanye West"],
+        "duration": 548,
+        "youtubeArtistId": ["UCRY5dYsbIN5TylSbd7gVnZg"],
+        "youtubeId": "VhEoCOWUtcU",
+        "spotifyId": "3DK6m7It6Pw857FcQftMds",
+        "spotifyArtistId": ["5K4W6rqBFWDnAN6FQUkS6x", "0ONHkAv9pCAFxb0zJwDNTy"],
+    }
+]
 generator = main.PlaylistGenerator()
 
 

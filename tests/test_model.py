@@ -12,14 +12,29 @@ rawSpotifyTrack = {
     "id": "spotify_track_id",
     "name": "Spotify Track",
     "artists": [{"id": "spotify_artist_id", "name": "Spotify Artist"}],
-    "duration_ms": 300000  # 5 minutes
+    "duration_ms": 300000,  # 5 minutes
 }
 
 rawYoutubeTrack = {
-    "videoId": "youtube_video_id",
-    "title": "YouTube Track",
-    "artists": [{"name": "YouTube Artist"}],
-    "duration_seconds": 300  # 5 minutes
+    "videoId": "TNPmfBrmlxc",
+    "title": "Big Big Sesh - Seshlehem",
+    "artists": [{"name": "Seshlehem", "id": "UCGE1DCR_xJO5y72HWakqnbA"}],
+    "album": None,
+    "likeStatus": "INDIFFERENT",
+    "inLibrary": None,
+    "thumbnails": [
+        {
+            "url": "https://i.ytimg.com/vi/TNPmfBrmlxc/sddefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCghqEJQEGHgg6AJIWg&rs=AMzJL3kwV8omBUowoxPCapdQgV5NaXUg7w",
+            "width": 400,
+            "height": 225,
+        }
+    ],
+    "isAvailable": True,
+    "isExplicit": False,
+    "videoType": "MUSIC_VIDEO_TYPE_UGC",
+    "duration": "3:02",
+    "duration_seconds": 182,
+    "setVideoId": "74CEF74FBE23B0C5",
 }
 
 rawConfig = {
@@ -51,17 +66,18 @@ def test_youtubeTrackParsing() -> None:
     """Test for parsing raw YouTube track"""
     youtubeTrack = Track(**rawYoutubeTrack)
 
-    assert youtubeTrack.youtubeId == "youtube_video_id"
-    assert youtubeTrack.title == "YouTube Track"
-    assert youtubeTrack.artists == ["YouTube Artist"]
-    assert youtubeTrack.duration == 300  # seconds
+    assert youtubeTrack.youtubeId == "TNPmfBrmlxc"
+    assert youtubeTrack.title == "Big Big Sesh - Seshlehem"
+    assert youtubeTrack.artists == ["Seshlehem"]
+    assert youtubeTrack.youtubeArtistId == ["UCGE1DCR_xJO5y72HWakqnbA"]
+    assert youtubeTrack.duration == 182  # seconds
 
 
 def test_trackTitleFormatting() -> None:
     """TODO: Test to make sure that if the artist name is in the title - it'll be excluded & nicely formatted."""
     rawTrackWithArtistInTitle = {
         "title": "Artist - Track",
-        "artists": [{"name": "Artist"}]
+        "artists": [{"name": "Artist"}],
     }
 
     track = Track(**rawTrackWithArtistInTitle)
