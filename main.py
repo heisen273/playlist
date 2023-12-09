@@ -7,17 +7,25 @@ from more_itertools import chunked
 # Integrations
 import spotipy
 from spotipy import CacheFileHandler
-from ytmusicapi import YTMusic
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
+from ytmusicapi import YTMusic
 
 # Models
 from model.Config import Config
 from model.Track import Track
 
 # Constants
-from constants import SPOTIFY_SCOPES, MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE, MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE, lastFMUrl
+from constants import (
+    SPOTIFY_SCOPES,
+    MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE,
+    MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE,
+    lastFMUrl,
+    DEFAULT_TIMEOUT,
+)
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="[%(asctime)s] [%(levelname)s] %(message)s"
+)
 logger: logging.Logger = logging.getLogger()
 
 
@@ -35,21 +43,28 @@ class PlaylistGenerator:
         self.youtube: YTMusic = YTMusic(self.config.youtubeAuthJson)
 
         # Init spotify.
-        spotifyCredentials = SpotifyClientCredentials(client_id=self.config.spotifyClientId,
-                                                      client_secret=self.config.spotifyClientSecret)
+        spotifyCredentials = SpotifyClientCredentials(
+            client_id=self.config.spotifyClientId,
+            client_secret=self.config.spotifyClientSecret,
+        )
 
-        self.spotify = spotipy.Spotify(client_credentials_manager=spotifyCredentials,
-                                       auth_manager=SpotifyOAuth(
-                                           open_browser=False,
-                                           client_id=self.config.spotifyClientId,
-                                           client_secret=self.config.spotifyClientSecret,
-                                           redirect_uri=self.config.redirectUrl,
-                                           scope=SPOTIFY_SCOPES,
-                                           cache_handler=CacheFileHandler(cache_path=".spotify_cache"))
-                                       )
+        self.spotify = spotipy.Spotify(
+            client_credentials_manager=spotifyCredentials,
+            auth_manager=SpotifyOAuth(
+                open_browser=False,
+                client_id=self.config.spotifyClientId,
+                client_secret=self.config.spotifyClientSecret,
+                redirect_uri=self.config.redirectUrl,
+                scope=SPOTIFY_SCOPES,
+                cache_handler=CacheFileHandler(cache_path=".spotify_cache"),
+            ),
+        )
 
         # Init lastFM
-        self.lastfm = pylast.LastFMNetwork(api_key=self.config.lastFMClientId, api_secret=self.config.lastFMClientSecret)
+        self.lastfm = pylast.LastFMNetwork(
+            api_key=self.config.lastFMClientId,
+            api_secret=self.config.lastFMClientSecret,
+        )
 
     def getLastYoutubeTracks(self, lastN: int = 10) -> list[Track]:
         """
@@ -60,17 +75,25 @@ class PlaylistGenerator:
         # If the main YouTube playlist is not set in the configuration fetch it directly from YouTube.
         if not self.config.mainYoutubePlaylist:
             # Get all playlists & sort playlists by tracks count.
-            allPlaylists: list[dict] = sorted(self.youtube.get_library_playlists(),
-                                              key=lambda x: x.get("count", 0), reverse=True)
+            allPlaylists: list[dict] = sorted(
+                self.youtube.get_library_playlists(),
+                key=lambda x: x.get("count", 0),
+                reverse=True,
+            )
 
             # Assume that biggest playlist is the main one.
             self.config.mainYoutubePlaylist = allPlaylists[0]["playlistId"]
             self.config.store()
 
-        mainPlaylist: dict = self.youtube.get_playlist(playlistId=self.config.mainYoutubePlaylist)
+        mainPlaylist: dict = self.youtube.get_playlist(
+            playlistId=self.config.mainYoutubePlaylist
+        )
 
         # Override spotifyArtistId, since it's youtube-only tracks.
-        tracks: list[Track] = [Track(**rawTrack, spotifyArtistId=None) for rawTrack in mainPlaylist.get("tracks", [])[:lastN]]
+        tracks: list[Track] = [
+            Track(**rawTrack, spotifyArtistId=None)
+            for rawTrack in mainPlaylist.get("tracks", [])[:lastN]
+        ]
 
         return tracks
 
@@ -83,7 +106,10 @@ class PlaylistGenerator:
         rawTracks = self.spotify.current_user_saved_tracks(limit=lastN)
 
         # Override youtubeArtistId, since it's spotify-only tracks.
-        tracks: list[Track] = [Track(**rawTrack["track"], youtubeArtistId=None) for rawTrack in rawTracks.get("items", [])[:lastN]]
+        tracks: list[Track] = [
+            Track(**rawTrack["track"], youtubeArtistId=None)
+            for rawTrack in rawTracks.get("items", [])[:lastN]
+        ]
 
         return tracks
 
@@ -93,7 +119,9 @@ class PlaylistGenerator:
         for track in tracks:
 
             if not (spotifyMatch := self.searchTrackOnSpotify(track)):
-                logger.warning(f"{track.title} / {track.artistName} were not found on Spotify")
+                logger.warning(
+                    f"{track.title} / {track.artistName} were not found on Spotify"
+                )
                 continue
 
             track.spotifyId = spotifyMatch["id"]
@@ -105,7 +133,9 @@ class PlaylistGenerator:
         for track in tracks:
 
             if not (youtubeMatch := self.searchTrackOnYoutube(track)):
-                logger.warning(f"{track.title} / {track.artistName} were not found on Youtube")
+                logger.warning(
+                    f"{track.title} / {track.artistName} were not found on Youtube"
+                )
                 continue
 
             track.youtubeId = youtubeMatch.youtubeId
@@ -116,16 +146,24 @@ class PlaylistGenerator:
         Searches for a track on Spotify based on the provided Track object.
         """
         # if/else to handle the case when artist name is already in track name.
-        searchQuery = f"{track.title}" if track.artistName in track.title else f"{track.artistName} {track.title}"
+        searchQuery = (
+            f"{track.title}"
+            if track.artistName in track.title
+            else f"{track.artistName} {track.title}"
+        )
 
         # Fetch results from spotify.
-        searchResults = self.spotify.search(q=searchQuery, limit=5).get("tracks", {"item": []}).get("items", [])
+        searchResults = (
+            self.spotify.search(q=searchQuery, limit=5)
+            .get("tracks", {"item": []})
+            .get("items", [])
+        )
 
         nonExplicitMatch: dict | None = None
         for searchResult in searchResults:
 
             searchResultDuration: int = round(searchResult.get("duration_ms", 1) / 1000)
-            isExplicit: bool = searchResult.get('explicit', False) is True
+            isExplicit: bool = searchResult.get("explicit", False) is True
 
             # LastFM is so bad it won't even return durations._.
             if not track.duration:
@@ -137,9 +175,9 @@ class PlaylistGenerator:
                 # Return right away if it's explicit match.
                 if isExplicit:
                     return searchResult
+
                 # Otherwise search a bit more and fallback to non-explicit match.
-                else:
-                    nonExplicitMatch = searchResult
+                nonExplicitMatch = searchResult
 
         return nonExplicitMatch
 
@@ -149,11 +187,19 @@ class PlaylistGenerator:
         """
         # TODO: add validator into the model to handle this case there upon init of `Track()`.
         # if/else to handle the case when artist name is already in track name.
-        searchQuery = f"{track.title}" if track.artistName in track.title else f"{track.artistName} {track.title}"
+        searchQuery = (
+            f"{track.title}"
+            if track.artistName in track.title
+            else f"{track.artistName} {track.title}"
+        )
 
         # Fetch results from spotify.
-        searchResults: list[Track] = [Track(**searchResult, spotifyArtistId=None) for searchResult in
-                                      self.youtube.search(query=searchQuery, filter="songs", limit=5)[:5]]
+        searchResults: list[Track] = [
+            Track(**searchResult, spotifyArtistId=None)
+            for searchResult in self.youtube.search(
+                query=searchQuery, filter="songs", limit=5
+            )[:5]
+        ]
 
         for searchResult in searchResults:
 
@@ -166,15 +212,21 @@ class PlaylistGenerator:
             if searchResultDuration in range(track.duration - 5, track.duration + 5):
                 return searchResult
 
-    def getYoutubeRecommendations(self, tracks: list[Track], limit: int = 5) -> list[Track]:
+    def getYoutubeRecommendations(
+        self, tracks: list[Track], limit: int = 5
+    ) -> list[Track]:
         """
         Retrieves Youtube recommendations based on a list of input tracks.
 
         In result, you'll get this many tracks:
         <...>
         """
-        logger.info(f"Executing `getYoutubeRecommendations()` with {len(tracks)} tracks")
-        youtubeTracksIds: list[str] = [track.youtubeId for track in tracks if track.youtubeId]
+        logger.info(
+            f"Executing `getYoutubeRecommendations()` with {len(tracks)} tracks"
+        )
+        youtubeTracksIds: list[str] = [
+            track.youtubeId for track in tracks if track.youtubeId
+        ]
         recommendedTracks: list[Track] = []
 
         # need to do stuff with this method. pass there `videoId` of each track.
@@ -182,7 +234,7 @@ class PlaylistGenerator:
             result: dict = self.youtube.get_watch_playlist(videoId=trackId)
 
             recommendationsPerTrack: int = 0
-            for rawTrack in result.get("tracks", [])[1: limit + 1]:
+            for rawTrack in result.get("tracks", [])[1 : limit + 1]:
 
                 if recommendationsPerTrack >= limit:
                     break
@@ -190,24 +242,32 @@ class PlaylistGenerator:
                 # Override spotifyArtistId, since it's youtube-only recommendations.
                 recommendedTrack = Track(**rawTrack, spotifyArtistId=None)
 
-                if recommendedTrack.youtubeId not in [x.youtubeId for x in recommendedTracks]:
+                if recommendedTrack.youtubeId not in [
+                    x.youtubeId for x in recommendedTracks
+                ]:
                     recommendedTracks.append(recommendedTrack)
                     recommendationsPerTrack += 1
 
         return recommendedTracks
 
-    def getSpotifyRecommendations(self,
-                                  tracks: list[Track],
-                                  recommendationChunkSize: int = MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE,
-                                  limit: int = 5) -> list[Track]:
+    def getSpotifyRecommendations(
+        self,
+        tracks: list[Track],
+        recommendationChunkSize: int = MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE,
+        limit: int = 5,
+    ) -> list[Track]:
         """
         Retrieves Spotify recommendations based on a list of input tracks.
 
         In result, you'll get this many tracks:
         ( len(tracks) / recommendationChunkSize ) * 5
         """
-        logger.info(f"Executing `getSpotifyRecommendations()` with {len(tracks)} tracks")
-        spotifyTracksIds: list[str] = [track.spotifyId for track in tracks if track.spotifyId]
+        logger.info(
+            f"Executing `getSpotifyRecommendations()` with {len(tracks)} tracks"
+        )
+        spotifyTracksIds: list[str] = [
+            track.spotifyId for track in tracks if track.spotifyId
+        ]
         recommendedTracks: list[Track] = []
 
         # Default max chunk-size is 5 tracks(i.e. you can't ask for recommendation based on more than 5tracks).
@@ -236,10 +296,9 @@ class PlaylistGenerator:
         # somehow i think it won't work out well.
         pass
 
-    def getLastFMRecommendations(self,
-                                 tracks: list[Track],
-                                 sameArtistMargin: int = 1,
-                                 sameTrackMargin: int = 2) -> list[Track]:
+    def getLastFMRecommendations(
+        self, tracks: list[Track], sameArtistMargin: int = 1, sameTrackMargin: int = 2
+    ) -> list[Track]:
         """
         Retrieves LastFM recommendations based on a list of input tracks.
         There's up to two recommendations per 1 input track.
@@ -254,16 +313,22 @@ class PlaylistGenerator:
 
         for track in tracks:
 
-            url: str = lastFMUrl.format(artist=track.firstArtistName,
-                                        title=track.title,
-                                        apiKey=self.config.lastFMClientId)
+            url: str = lastFMUrl.format(
+                artist=track.firstArtistName,
+                title=track.title,
+                apiKey=self.config.lastFMClientId,
+            )
             try:
-                result: dict = requests.get(url).json()
+                result: dict = requests.get(url, timeout=DEFAULT_TIMEOUT).json()
                 if "error" in result:
-                    logger.error(f"{track.title} / {track.firstArtistName} was failed to find on LastFM: {result}")
+                    logger.error(
+                        f"{track.title} / {track.firstArtistName} was failed to find on LastFM: {result}"
+                    )
                     continue
             except requests.exceptions.JSONDecodeError as err:
-                logger.error(f"{track.title} / {track.firstArtistName} was failed to find on LastFM: {err}")
+                logger.error(
+                    f"{track.title} / {track.firstArtistName} was failed to find on LastFM: {err}"
+                )
                 continue
 
             sameArtistCounter: int = 0
@@ -277,7 +342,12 @@ class PlaylistGenerator:
                 sameTrackCounter += 1
                 # Override youtube & spotify artistIds, since it's lastfm-only recommendations.
                 # Also override duration, since lastFM duration is unreliable.
-                recommendedTrack = Track(**rawTrack, youtubeArtistId=None, spotifyArtistId=None, zeroDuration=True)
+                recommendedTrack = Track(
+                    **rawTrack,
+                    youtubeArtistId=None,
+                    spotifyArtistId=None,
+                    zeroDuration=True,
+                )
 
                 # LastFM recommendations suck, thus we allow:
                 # - Same artist only once.
@@ -297,10 +367,9 @@ class PlaylistGenerator:
         """
         pass
 
-    def createSpotifyPlaylist(self,
-                              lastN: int = 10,
-                              shuffle: bool = False,
-                              includeOriginals: bool = False) -> None:
+    def createSpotifyPlaylist(
+        self, lastN: int = 10, shuffle: bool = False, includeOriginals: bool = False
+    ) -> None:
         """
         <useful doc-string>
         """
@@ -310,7 +379,9 @@ class PlaylistGenerator:
         self.fillYoutubeId(tracks=lasSpotifyTracks)
 
         # Get youtube recommendations based on `lastYoutubeTracks`.
-        recommendedTracks: list[Track] = self.getYoutubeRecommendations(lasSpotifyTracks)
+        recommendedTracks: list[Track] = self.getYoutubeRecommendations(
+            lasSpotifyTracks
+        )
 
         # Get lastFM recommendations based on Spotify tracks.
         recommendedTracks += self.getLastFMRecommendations(tracks=recommendedTracks)
@@ -322,7 +393,9 @@ class PlaylistGenerator:
         if includeOriginals:
             recommendedTracks += lasSpotifyTracks
 
-        spotifyTracks: list[str] = [f"https://open.spotify.com/track/{x.spotifyId}" for x in recommendedTracks]
+        spotifyTracks: list[str] = [
+            f"https://open.spotify.com/track/{x.spotifyId}" for x in recommendedTracks
+        ]
 
         # Shuffle tracks if needed.
         if shuffle:
@@ -334,18 +407,24 @@ class PlaylistGenerator:
         # First create a playlist
         if not self.config.spotifyUserId:
             self.config.spotifyUserId = self.spotify.current_user()["id"]
-        playlist: dict = self.spotify.user_playlist_create(user=self.config.spotifyUserId,
-                                                           name="6th December testV2",
-                                                           description="my test")
+        playlist: dict = self.spotify.user_playlist_create(
+            user=self.config.spotifyUserId,
+            name="6th December testV2",
+            description="my test",
+        )
         # Then fill it with tracks, 100tracks at a time.
         for tracksChunk in chunked(spotifyTracks, MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE):
-            self.spotify.playlist_add_items(playlist_id=playlist["id"], items=tracksChunk)
+            self.spotify.playlist_add_items(
+                playlist_id=playlist["id"], items=tracksChunk
+            )
 
-    def createYoutubePlaylist(self,
-                              lastN: int = 10,
-                              shuffle: bool = False,
-                              includeOriginals: bool = False,
-                              standaloneRecommendations: bool = False) -> None:
+    def createYoutubePlaylist(
+        self,
+        lastN: int = 10,
+        shuffle: bool = False,
+        includeOriginals: bool = False,
+        standaloneRecommendations: bool = False,
+    ) -> None:
         """
         <useful doc-string>
         """
@@ -357,7 +436,9 @@ class PlaylistGenerator:
         getSpotifyRecommendationsParams: dict = {"tracks": lastYoutubeTracks}
         if standaloneRecommendations:
             getSpotifyRecommendationsParams["recommendationChunkSize"] = 1
-        recommendedTracks: list[Track] = self.getSpotifyRecommendations(**getSpotifyRecommendationsParams)
+        recommendedTracks: list[Track] = self.getSpotifyRecommendations(
+            **getSpotifyRecommendationsParams
+        )
 
         # Get lastFM recommendations based on Spotify tracks.
         recommendedTracks += self.getLastFMRecommendations(tracks=recommendedTracks)
@@ -365,7 +446,9 @@ class PlaylistGenerator:
         # Fulfill all recommendations with `.youtubeId`.
         self.fillYoutubeId(tracks=recommendedTracks)
         # Prepare a list of youtube track ids.
-        youtubeTracks: list[str] = [x.youtubeId for x in recommendedTracks if x.youtubeId]
+        youtubeTracks: list[str] = [
+            x.youtubeId for x in recommendedTracks if x.youtubeId
+        ]
 
         # Include original tracks if needed.
         if includeOriginals:
@@ -376,9 +459,9 @@ class PlaylistGenerator:
 
         # Create playlist with last tracks + recommendations on YouTube.
         logger.info(f"Creating playlist with {len(youtubeTracks)} tracks")
-        self.youtube.create_playlist(title="6th December testV2",
-                                     description="my test",
-                                     video_ids=youtubeTracks)
+        self.youtube.create_playlist(
+            title="6th December testV2", description="my test", video_ids=youtubeTracks
+        )
 
 
 if __name__ == "__main__":
@@ -388,6 +471,4 @@ if __name__ == "__main__":
     #                                 shuffle=True,
     #                                 includeOriginals=True,
     #                                 standaloneRecommendations=True)
-    generator.createSpotifyPlaylist(lastN=10,
-                                    shuffle=True,
-                                    includeOriginals=True)
+    generator.createSpotifyPlaylist(lastN=10, shuffle=True, includeOriginals=True)

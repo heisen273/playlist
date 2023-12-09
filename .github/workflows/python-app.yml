@@ -28,7 +28,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest pylint
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
+    - name: Pylint & flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
@@ -36,8 +36,11 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-        # run pylint
+        # run pylint for non-tests
         pylint --fail-under=8 $(git ls-files '*.py' | grep -v 'tests')
+
+        # run pylint for tests
+        pylint --fail-under=8 --function-naming-style=any --argument-naming-style=any $(git ls-files 'tests/test_*.py')
     - name: Test with pytest
       env:
         CONFIG_JSON: ${{ secrets.CONFIG_JSON }}

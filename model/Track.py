@@ -8,18 +8,26 @@ def artistNameValidator(value) -> list:
     # Handle case for
     # - Spotify & YouTube(when `x` is list).
     if isinstance(value, list):
-        return [x.get('name') if isinstance(x, dict) else x for x in value]
+        return [x.get("name") if isinstance(x, dict) else x for x in value]
     # Handle case for LastFM.
     elif isinstance(value, dict):
         return [value.get("name")]
 
 
-
 ArtistName = Annotated[list, BeforeValidator(artistNameValidator)]
 
-ArtistId = Annotated[list, AfterValidator(lambda artistList:
-                                          [x.get('id') if type(x) is dict else x for x in artistList])]
-Duration = Annotated[int, AfterValidator(lambda duration: round(duration / 1000) if duration > 1000 else duration)]
+ArtistId = Annotated[
+    list,
+    AfterValidator(
+        lambda artistList: [x.get("id") if type(x) is dict else x for x in artistList]
+    ),
+]
+Duration = Annotated[
+    int,
+    AfterValidator(
+        lambda duration: round(duration / 1000) if duration > 1000 else duration
+    ),
+]
 
 
 class Track(BaseModel):
@@ -35,19 +43,23 @@ class Track(BaseModel):
         super().__init__(**kwargs)
 
         # Special handling for ArtistId, so you could set it as `None` in method related to specific platform.
-        if kwargs.get('spotifyArtistId', 0) is None:
+        if kwargs.get("spotifyArtistId", 0) is None:
             self.spotifyArtistId = None
-        if kwargs.get('youtubeArtistId', 0) is None:
+        if kwargs.get("youtubeArtistId", 0) is None:
             self.youtubeArtistId = None
-        if kwargs.get('zeroDuration') is True:
+        if kwargs.get("zeroDuration") is True:
             self.duration = 0
 
     # Choice alias to match title from raw youtube & spotify jsons.
     # Note: `first_choice` is always youtube, second is always spotify.
     title: str | None = Field(validation_alias=AliasChoices("title", "name"))
-    artists: ArtistName | None = Field(validation_alias=AliasChoices("artists", "artist"))
+    artists: ArtistName | None = Field(
+        validation_alias=AliasChoices("artists", "artist")
+    )
 
-    duration: Duration | None = Field(validation_alias=AliasChoices("duration_seconds", "duration_ms"), default=None)
+    duration: Duration | None = Field(
+        validation_alias=AliasChoices("duration_seconds", "duration_ms"), default=None
+    )
 
     youtubeArtistId: ArtistId | None = Field(alias="artists", default=None)
     youtubeId: str | None = Field(alias="videoId", default=None)
@@ -69,12 +81,3 @@ class Track(BaseModel):
     def firstArtistName(self) -> str:
         """Docstring for artistName"""
         return self.artists[0]
-
-
-if __name__ == "__main__":
-    track = {'videoId': 'TNPmfBrmlxc', 'title': 'Big Big Sesh - Seshlehem', 'artists': [{'name': 'Seshlehem', 'id': 'UCGE1DCR_xJO5y72HWakqnbA'}], 'album': None, 'likeStatus': 'INDIFFERENT', 'inLibrary': None, 'thumbnails': [{'url': 'https://i.ytimg.com/vi/TNPmfBrmlxc/sddefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCghqEJQEGHgg6AJIWg&rs=AMzJL3kwV8omBUowoxPCapdQgV5NaXUg7w', 'width': 400, 'height': 225}], 'isAvailable': True, 'isExplicit': False, 'videoType': 'MUSIC_VIDEO_TYPE_UGC', 'duration': '3:02', 'duration_seconds': 182, 'setVideoId': '74CEF74FBE23B0C5'}
-
-    a = Track(**track, youtubeArtistId=None)
-    print(Track(**a.__dict__))
-
-

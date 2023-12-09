@@ -5,7 +5,9 @@ from pydantic import BaseModel, ConfigDict
 from constants import DEFAULT_PATH, DEFAULT_CONFIG_FILE
 
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="[%(asctime)s] [%(levelname)s] %(message)s"
+)
 logger: logging.Logger = logging.getLogger()
 
 
@@ -13,13 +15,19 @@ class Config(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    def __init__(self, filePath: str = "", fileName: str = "", loadFromDisk: bool = False, **kwargs):
-
+    def __init__(
+        self,
+        filePath: str = "",
+        fileName: str = "",
+        loadFromDisk: bool = False,
+        **kwargs,
+    ):
         """
         <useful doc-string>
         """
-
-        formattedPath: Path = Path(f"{filePath or DEFAULT_PATH}/{fileName or DEFAULT_CONFIG_FILE}")
+        formattedPath: Path = Path(
+            f"{filePath or DEFAULT_PATH}/{fileName or DEFAULT_CONFIG_FILE}"
+        )
 
         # Early exit in case if:
         # - not loading from disk.
