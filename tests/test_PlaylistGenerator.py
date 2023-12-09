@@ -1,4 +1,4 @@
-import main
+from core import main
 from model.Track import Track
 
 rawTracks: list[dict] = [
