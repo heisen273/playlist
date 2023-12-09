@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Pylint + Pytest
+name: CI
 
 on:
   push:
@@ -36,22 +36,21 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-        # run pylint for non-tests
-        pylint --fail-under=8 $(git ls-files '*.py' | grep -v 'tests')
+        # run pylint for project files(i.e. non-tests)
+        pylint $(git ls-files '*.py' | grep -v 'tests/')
 
         # run pylint for tests
-        pylint --fail-under=8 --function-naming-style=any --argument-naming-style=any $(git ls-files 'tests/test_*.py')
-    - name: Test with pytest
+        pylint --function-naming-style=any --argument-naming-style=any $(git ls-files 'tests/')
+    - name: Pytest
       env:
         CONFIG_JSON: ${{ secrets.CONFIG_JSON }}
         YOUTUBE_JSON: ${{ secrets.YOUTUBE_JSON }}
         SPOTIFY_JSON: ${{ secrets.SPOTIFY_JSON }}
       run: |
-        # Write github secret to a file: app .config.json & youtube .oauth.json
+        # Write github secret to a file: app .config.json, youtube .oauth.json & .spotify_cache
         eval "echo $CONFIG_JSON" >> $GITHUB_WORKSPACE/.config.json
         eval "echo $YOUTUBE_JSON" >> $GITHUB_WORKSPACE/.oauth.json
         eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/.spotify_cache
-        eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/tests/.spotify_cache
 
         pytest -v --cov
 

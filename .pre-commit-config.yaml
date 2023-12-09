@@ -36,12 +36,12 @@ repos:
       hooks:
         - id: pylint
           name: pylint non-tests
-          entry: pylint --fail-under=8 $(git ls-files '*.py' | grep -v 'tests')
+          entry: pylint --ignore-paths tests/
           language: system
           types: [python]
 
         - id: pylint
           name: pylint tests
-          entry: pylint --fail-under=8 --function-naming-style=any --argument-naming-style=any $(git ls-files 'tests/test_*.py')
+          entry: pylint --function-naming-style=any --argument-naming-style=any tests/
           language: system
           types: [python]

@@ -21,6 +21,7 @@ from constants import (
     MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE,
     lastFMUrl,
     DEFAULT_TIMEOUT,
+    DEFAULT_PATH,
 )
 
 logging.basicConfig(
@@ -30,6 +31,11 @@ logger: logging.Logger = logging.getLogger()
 
 
 class PlaylistGenerator:
+    # TODO:
+    #  - has to be splitted in different chunks. Maybe per platform ? Really not sure.
+    #  Yet, for sure i need to split this class in smaller chunks, it's too big.
+    #  - Currently there's 3 files generated: .oauth.json, .config.json, .spotify_cache – it's too many, i'm sure it's
+    #  possible to narrow it down to a single file(.config.json). Need to figure this one out.
     """
     Generates playlist based on your last X tracks.
     Also adds suggestions.
@@ -56,7 +62,9 @@ class PlaylistGenerator:
                 client_secret=self.config.spotifyClientSecret,
                 redirect_uri=self.config.redirectUrl,
                 scope=SPOTIFY_SCOPES,
-                cache_handler=CacheFileHandler(cache_path=".spotify_cache"),
+                cache_handler=CacheFileHandler(
+                    cache_path=f"{DEFAULT_PATH}/.spotify_cache"
+                ),
             ),
         )
 
@@ -117,7 +125,6 @@ class PlaylistGenerator:
         """Fills `.spotifyId` property on each track"""
         logger.info(f"Executing `fillSpotifyId()` for {len(tracks)} tracks")
         for track in tracks:
-
             if not (spotifyMatch := self.searchTrackOnSpotify(track)):
                 logger.warning(
                     f"{track.title} / {track.artistName} were not found on Spotify"
@@ -131,7 +138,6 @@ class PlaylistGenerator:
         """Fills `.youtubeId` property on each track"""
         logger.info(f"Executing `fillYoutubeId()` for {len(tracks)} tracks")
         for track in tracks:
-
             if not (youtubeMatch := self.searchTrackOnYoutube(track)):
                 logger.warning(
                     f"{track.title} / {track.artistName} were not found on Youtube"
@@ -161,7 +167,6 @@ class PlaylistGenerator:
 
         nonExplicitMatch: dict | None = None
         for searchResult in searchResults:
-
             searchResultDuration: int = round(searchResult.get("duration_ms", 1) / 1000)
             isExplicit: bool = searchResult.get("explicit", False) is True
 
@@ -171,7 +176,6 @@ class PlaylistGenerator:
 
             # If its duration is in range ±5sec - should be the same track.
             if searchResultDuration in range(track.duration - 5, track.duration + 5):
-
                 # Return right away if it's explicit match.
                 if isExplicit:
                     return searchResult
@@ -202,7 +206,6 @@ class PlaylistGenerator:
         ]
 
         for searchResult in searchResults:
-
             # LastFM is so bad it won't even return durations._.
             if not track.duration:
                 return searchResult
@@ -235,7 +238,6 @@ class PlaylistGenerator:
 
             recommendationsPerTrack: int = 0
             for rawTrack in result.get("tracks", [])[1 : limit + 1]:
-
                 if recommendationsPerTrack >= limit:
                     break
 
@@ -272,12 +274,10 @@ class PlaylistGenerator:
 
         # Default max chunk-size is 5 tracks(i.e. you can't ask for recommendation based on more than 5tracks).
         for tracksChunk in chunked(spotifyTracksIds, recommendationChunkSize):
-
             # Limit result of recommendations also to 5. It helps to reduce junk recommendations from spotify.
             result = self.spotify.recommendations(seed_tracks=tracksChunk, limit=limit)
 
             for rawTrack in result.get("tracks", []):
-
                 # Override youtubeArtistId, since it's spotify-only recommendations.
                 recommendedTrack = Track(**rawTrack, youtubeArtistId=None)
 
@@ -312,7 +312,6 @@ class PlaylistGenerator:
         recommendedTracks: list[Track] = []
 
         for track in tracks:
-
             url: str = lastFMUrl.format(
                 artist=track.firstArtistName,
                 title=track.title,
@@ -334,7 +333,6 @@ class PlaylistGenerator:
             sameArtistCounter: int = 0
             sameTrackCounter: int = 0
             for rawTrack in result.get("similartracks", {}).get("track", []):
-
                 # Break the loop if already got enough of same track.
                 if sameTrackCounter > sameTrackMargin:
                     break
@@ -352,7 +350,6 @@ class PlaylistGenerator:
                 # LastFM recommendations suck, thus we allow:
                 # - Same artist only once.
                 if recommendedTrack.firstArtistName == track.firstArtistName:
-
                     sameArtistCounter += 1
                     if sameArtistCounter > sameArtistMargin:
                         continue
