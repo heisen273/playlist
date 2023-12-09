@@ -50,7 +50,7 @@ jobs:
         eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/.spotify_cache
         eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/tests/.spotify_cache
 
-        pytest -v
+        pytest -v --cov
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
