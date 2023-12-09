@@ -380,6 +380,11 @@ class PlaylistGenerator:
                                      description="my test",
                                      video_ids=youtubeTracks)
 
+    def testingCoverageReport(self):
+        """Docstring for testingCoverageReport"""
+        # For the sake of testing
+        pass
+
 
 if __name__ == "__main__":
     generator = PlaylistGenerator()
