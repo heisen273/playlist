@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 import random
 import pylast
@@ -8,6 +6,7 @@ from more_itertools import chunked
 
 # Integrations
 import spotipy
+from spotipy import CacheFileHandler
 from ytmusicapi import YTMusic
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 
@@ -15,18 +14,12 @@ from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 from model.Config import Config
 from model.Track import Track
 
-
-DEFAULT_PATH = "/Users/anton/projects/playlist"
-SPOTIFY_SCOPES: list[str] = ["user-library-read", "playlist-modify-public", "playlist-modify-private"]
-MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE: int = 5
-MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE: int = 100
-
+# Constants
+from constants import SPOTIFY_SCOPES, MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE, MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE, lastFMUrl
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
 logger: logging.Logger = logging.getLogger()
 
-# TODO: implement 'what I don't want to hear' functionality.
-blackList: list[str] = ["travis scott"]
 
 class PlaylistGenerator:
     """
@@ -44,12 +37,16 @@ class PlaylistGenerator:
         # Init spotify.
         spotifyCredentials = SpotifyClientCredentials(client_id=self.config.spotifyClientId,
                                                       client_secret=self.config.spotifyClientSecret)
+
         self.spotify = spotipy.Spotify(client_credentials_manager=spotifyCredentials,
                                        auth_manager=SpotifyOAuth(
+                                           open_browser=False,
                                            client_id=self.config.spotifyClientId,
                                            client_secret=self.config.spotifyClientSecret,
-                                           redirect_uri="http://localhost:3003/myredirect",
-                                           scope=SPOTIFY_SCOPES))
+                                           redirect_uri=self.config.redirectUrl,
+                                           scope=SPOTIFY_SCOPES,
+                                           cache_handler=CacheFileHandler(cache_path=".spotify_cache"))
+                                       )
 
         # Init lastFM
         self.lastfm = pylast.LastFMNetwork(api_key=self.config.lastFMClientId, api_secret=self.config.lastFMClientSecret)
@@ -155,7 +152,8 @@ class PlaylistGenerator:
         searchQuery = f"{track.title}" if track.artistName in track.title else f"{track.artistName} {track.title}"
 
         # Fetch results from spotify.
-        searchResults: list[Track] = [Track(**searchResult, spotifyArtistId=None) for searchResult in self.youtube.search(query=searchQuery, filter="songs", limit=5)[:5]]
+        searchResults: list[Track] = [Track(**searchResult, spotifyArtistId=None) for searchResult in
+                                      self.youtube.search(query=searchQuery, filter="songs", limit=5)[:5]]
 
         for searchResult in searchResults:
 
@@ -253,11 +251,12 @@ class PlaylistGenerator:
         """
         logger.info(f"Executing `getLastFMRecommendations()` with {len(tracks)} tracks")
         recommendedTracks: list[Track] = []
-        lastFMUrl: str = "https://ws.audioscrobbler.com/2.0/?method=track.getsimilar&artist={artist}&track={title}&api_key={apiKey}&format=json&limit=5"
 
         for track in tracks:
 
-            url: str = lastFMUrl.format(artist=track.firstArtistName, title=track.title, apiKey=self.config.lastFMClientId)
+            url: str = lastFMUrl.format(artist=track.firstArtistName,
+                                        title=track.title,
+                                        apiKey=self.config.lastFMClientId)
             try:
                 result: dict = requests.get(url).json()
                 if "error" in result:
@@ -341,7 +340,6 @@ class PlaylistGenerator:
         # Then fill it with tracks, 100tracks at a time.
         for tracksChunk in chunked(spotifyTracks, MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE):
             self.spotify.playlist_add_items(playlist_id=playlist["id"], items=tracksChunk)
-
 
     def createYoutubePlaylist(self,
                               lastN: int = 10,

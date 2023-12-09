@@ -4,31 +4,27 @@ from pydantic.functional_validators import BeforeValidator, AfterValidator
 from typing_extensions import Annotated
 
 
-DEFAULT_PATH = "/Users/anton/projects/playlist"
-DEFAULT_CONFIG_FILE = ".config.json"
-
-
 def artistNameValidator(value) -> list:
     # Handle case for
     # - Spotify & YouTube(when `x` is list).
-    # - case for previously exported obj via self.__dict__(when `x` isn't a dict str)
-    if type(value) is list:
-        return [x.get('name') if type(x) is dict else x for x in value]
+    if isinstance(value, list):
+        return [x.get('name') if isinstance(x, dict) else x for x in value]
     # Handle case for LastFM.
-    elif type(value) is dict:
+    elif isinstance(value, dict):
         return [value.get("name")]
-    # Handle case for previously exported obj via self.__dict__
 
 
 
 ArtistName = Annotated[list, BeforeValidator(artistNameValidator)]
 
 ArtistId = Annotated[list, AfterValidator(lambda artistList:
-                                                  [x.get('id') if type(x) is dict else x for x in artistList])]
+                                          [x.get('id') if type(x) is dict else x for x in artistList])]
 Duration = Annotated[int, AfterValidator(lambda duration: round(duration / 1000) if duration > 1000 else duration)]
 
 
 class Track(BaseModel):
+
+    model_config = ConfigDict(populate_by_name=True)
 
     # TODO:
     #  - needs a __hash__ method, so you could quickly check `if track is in list of tracks`.
@@ -45,9 +41,6 @@ class Track(BaseModel):
             self.youtubeArtistId = None
         if kwargs.get('zeroDuration') is True:
             self.duration = 0
-
-
-    model_config = ConfigDict(populate_by_name=True)
 
     # Choice alias to match title from raw youtube & spotify jsons.
     # Note: `first_choice` is always youtube, second is always spotify.

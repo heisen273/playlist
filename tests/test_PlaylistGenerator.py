@@ -110,7 +110,6 @@ def test_youtubeRecommendations() -> None:
     assert not recommendedTrack.spotifyArtistId
 
 
-
 def test_getLastSpotifyTracks():
     """
     Test that validates `getLastSpotifyTracks()` functionality & makes sure that it returns `lastN` tracks.

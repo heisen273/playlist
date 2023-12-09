@@ -32,8 +32,10 @@ rawConfig = {
     "spotifyClientSecret": "spotify_client_secret",
     "lastFMClientId": "lastfm_client_id",
     "lastFMClientSecret": "lastfm_client_secret",
-    "youtubeAuthJson": "path/to/youtube_auth.json"
+    "youtubeAuthJson": "path/to/youtube_auth.json",
+    "redirectUrl": "my.redirect",
 }
+
 
 def test_spotifyTrackParsing() -> None:
     """Test for parsing raw Spotify track"""
@@ -44,6 +46,7 @@ def test_spotifyTrackParsing() -> None:
     assert spotifyTrack.artists == ["Spotify Artist"]
     assert spotifyTrack.duration == 300  # seconds
 
+
 def test_youtubeTrackParsing() -> None:
     """Test for parsing raw YouTube track"""
     youtubeTrack = Track(**rawYoutubeTrack)
@@ -53,6 +56,7 @@ def test_youtubeTrackParsing() -> None:
     assert youtubeTrack.artists == ["YouTube Artist"]
     assert youtubeTrack.duration == 300  # seconds
 
+
 def test_trackTitleFormatting() -> None:
     """TODO: Test to make sure that if the artist name is in the title - it'll be excluded & nicely formatted."""
     rawTrackWithArtistInTitle = {
@@ -60,11 +64,12 @@ def test_trackTitleFormatting() -> None:
         "artists": [{"name": "Artist"}]
     }
 
-    formatted_track = Track(**rawTrackWithArtistInTitle)
+    track = Track(**rawTrackWithArtistInTitle)
 
     # FIXME:
-    # assert formatted_track.formatted_title == "Track"
-    assert formatted_track.artists == ["Artist"]
+    # assert track.formatted_title == "Track"
+    assert track.artists == ["Artist"]
+
 
 def test_configParsing() -> None:
     """Test for parsing config JSON"""
@@ -80,6 +85,7 @@ def test_configParsing() -> None:
     assert config.lastFMClientId == "lastfm_client_id"
     assert config.lastFMClientSecret == "lastfm_client_secret"
     assert config.youtubeAuthJson == "path/to/youtube_auth.json"
+    assert config.redirectUrl == "my.redirect"
 
 
 def test_configStoring(tmp_path: Path) -> None:
@@ -100,4 +106,4 @@ def test_configStoring(tmp_path: Path) -> None:
 
     # All other 9 keys are `None`
     assert not any(storedConfigData.values())
-    assert len(storedConfigData.values()) == 9
+    assert len(storedConfigData.values()) == 10

@@ -2,10 +2,7 @@ import json
 import logging
 from pathlib import Path
 from pydantic import BaseModel, ConfigDict
-
-# TODO: Add these globals into file with constants.
-DEFAULT_PATH = "/Users/anton/projects/playlist"
-DEFAULT_CONFIG_FILE = ".config.json"
+from constants import DEFAULT_PATH, DEFAULT_CONFIG_FILE
 
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
@@ -62,6 +59,9 @@ class Config(BaseModel):
 
     # Youtube credentials are loaded from .oauth.json file, so it's required to just store the filePath.
     youtubeAuthJson: str | None = None
+
+    # Default redirect url
+    redirectUrl: str | None = None
 
     def store(self, filePath: str = DEFAULT_PATH, fileName: str = DEFAULT_CONFIG_FILE):
         """(Over)writes config into default path"""
