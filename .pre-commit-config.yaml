@@ -1,0 +1,47 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+default_language_version:
+    python: python3.11
+
+repos:
+
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v3.2.0
+      hooks:
+        - id: trailing-whitespace
+        - id: end-of-file-fixer
+        - id: check-yaml
+        - id: check-added-large-files
+        - id: debug-statements
+
+    - repo: https://github.com/ambv/black
+      rev: 23.7.0
+      hooks:
+          - id: black
+
+    - repo: https://github.com/PyCQA/flake8
+      rev: 6.1.0
+      hooks:
+        - id: flake8
+          args:
+            - "--count"
+            - "--select=E9,F63,F7,F82"
+            - "--exit-zero"
+            - "--max-complexity=10"
+            - "--max-line-length=127"
+            - "--statistics"
+
+    - repo: local
+      hooks:
+        - id: pylint
+          name: pylint non-tests
+          entry: pylint --fail-under=8 $(git ls-files '*.py' | grep -v 'tests')
+          language: system
+          types: [python]
+
+        - id: pylint
+          name: pylint tests
+          entry: pylint --fail-under=8 --function-naming-style=any --argument-naming-style=any $(git ls-files 'tests/test_*.py')
+          language: system
+          types: [python]
