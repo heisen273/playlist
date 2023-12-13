@@ -54,23 +54,43 @@ rawConfig = {
 
 def test_spotifyTrackParsing() -> None:
     """Test for parsing raw Spotify track"""
-    spotifyTrack = Track(**rawSpotifyTrack)
+    spotifyTrack = Track(**rawSpotifyTrack, youtubeArtistId=None)
 
     assert spotifyTrack.spotifyId == "spotify_track_id"
     assert spotifyTrack.title == "Spotify Track"
     assert spotifyTrack.artists == ["Spotify Artist"]
+    assert spotifyTrack.artistName == "Spotify Artist"
+    assert spotifyTrack.firstArtistName == "Spotify Artist"
     assert spotifyTrack.duration == 300  # seconds
+
+    assert not spotifyTrack.youtubeId
+    assert not spotifyTrack.youtubeArtistId
 
 
 def test_youtubeTrackParsing() -> None:
     """Test for parsing raw YouTube track"""
-    youtubeTrack = Track(**rawYoutubeTrack)
+    youtubeTrack = Track(**rawYoutubeTrack, spotifyArtistId=None)
 
     assert youtubeTrack.youtubeId == "TNPmfBrmlxc"
     assert youtubeTrack.title == "Big Big Sesh - Seshlehem"
     assert youtubeTrack.artists == ["Seshlehem"]
+    assert youtubeTrack.artistName == "Seshlehem"
+    assert youtubeTrack.firstArtistName == "Seshlehem"
     assert youtubeTrack.youtubeArtistId == ["UCGE1DCR_xJO5y72HWakqnbA"]
     assert youtubeTrack.duration == 182  # seconds
+
+    assert not youtubeTrack.spotifyId
+    assert not youtubeTrack.spotifyArtistId
+
+
+def test_youtubeTrackDumping() -> None:
+    """Test for parsing raw YouTube track, then dumping it and validating that fields are still there."""
+    youtubeTrack = Track(**rawYoutubeTrack)
+
+    dumpedTrack: dict = youtubeTrack.model_dump()
+
+    assert dumpedTrack["artistName"] == "Seshlehem"
+    assert dumpedTrack["firstArtistName"] == "Seshlehem"
 
 
 def test_trackTitleFormatting() -> None:
