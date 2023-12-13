@@ -12,7 +12,7 @@ rawTracks: list[dict] = [
         "spotifyArtistId": ["5K4W6rqBFWDnAN6FQUkS6x", "0ONHkAv9pCAFxb0zJwDNTy"],
     }
 ]
-generator = main.PlaylistGenerator()
+generator = main.PlaylistGenerator(loadConfigFromDisk=True)
 
 
 def test_getLastYoutubeTracks():

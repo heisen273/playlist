@@ -2,6 +2,7 @@ import logging
 import random
 import pylast
 import requests
+from datetime import datetime
 from more_itertools import chunked
 
 # Integrations
@@ -41,9 +42,15 @@ class PlaylistGenerator:
     Also adds suggestions.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, loadConfigFromDisk: bool = False) -> None:
         # Init config.
-        self.config: Config = Config(loadFromDisk=True)
+        self.config: Config = Config(loadFromDisk=loadConfigFromDisk)
+
+        # Init lastFM
+        self.lastfm = pylast.LastFMNetwork(
+            api_key=self.config.lastFMClientId,
+            api_secret=self.config.lastFMClientSecret,
+        )
 
         # Init youtube.
         self.youtube: YTMusic = YTMusic(self.config.youtubeAuthJson)
@@ -68,12 +75,6 @@ class PlaylistGenerator:
             ),
         )
 
-        # Init lastFM
-        self.lastfm = pylast.LastFMNetwork(
-            api_key=self.config.lastFMClientId,
-            api_secret=self.config.lastFMClientSecret,
-        )
-
     def getLastYoutubeTracks(self, lastN: int = 10) -> list[Track]:
         """
         Retrieves the last N tracks from the main YouTube playlist.
@@ -85,13 +86,12 @@ class PlaylistGenerator:
             # Get all playlists & sort playlists by tracks count.
             allPlaylists: list[dict] = sorted(
                 self.youtube.get_library_playlists(),
-                key=lambda x: x.get("count", 0),
+                key=lambda x: int(x.get("count", "0").replace(",", "")),
                 reverse=True,
             )
 
             # Assume that biggest playlist is the main one.
             self.config.mainYoutubePlaylist = allPlaylists[0]["playlistId"]
-            self.config.store()
 
         mainPlaylist: dict = self.youtube.get_playlist(
             playlistId=self.config.mainYoutubePlaylist
@@ -366,7 +366,7 @@ class PlaylistGenerator:
 
     def createSpotifyPlaylist(
         self, lastN: int = 10, shuffle: bool = False, includeOriginals: bool = False
-    ) -> None:
+    ) -> str:
         """
         <useful doc-string>
         """
@@ -404,9 +404,10 @@ class PlaylistGenerator:
         # First create a playlist
         if not self.config.spotifyUserId:
             self.config.spotifyUserId = self.spotify.current_user()["id"]
+        playlistName: str = datetime.now().strftime("%d %b %H:%M")
         playlist: dict = self.spotify.user_playlist_create(
             user=self.config.spotifyUserId,
-            name="6th December testV2",
+            name=playlistName,
             description="my test",
         )
         # Then fill it with tracks, 100tracks at a time.
@@ -415,13 +416,15 @@ class PlaylistGenerator:
                 playlist_id=playlist["id"], items=tracksChunk
             )
 
+        return f"https://open.spotify.com/playlist/{playlist['id']}"
+
     def createYoutubePlaylist(
         self,
         lastN: int = 10,
         shuffle: bool = False,
         includeOriginals: bool = False,
         standaloneRecommendations: bool = False,
-    ) -> None:
+    ) -> str:
         """
         <useful doc-string>
         """
@@ -456,16 +459,21 @@ class PlaylistGenerator:
 
         # Create playlist with last tracks + recommendations on YouTube.
         logger.info(f"Creating playlist with {len(youtubeTracks)} tracks")
-        self.youtube.create_playlist(
-            title="6th December testV2", description="my test", video_ids=youtubeTracks
+        playlistName: str = datetime.now().strftime("%d %b %H:%M")
+        playlistId: str = self.youtube.create_playlist(
+            title=playlistName, description="my test", video_ids=youtubeTracks
         )
+
+        return f"https://music.youtube.com/playlist?list={playlistId}"
 
 
 if __name__ == "__main__":
     generator = PlaylistGenerator()
     # generator.createYoutubePlaylist()
-    # generator.createYoutubePlaylist(lastN=10,
-    #                                 shuffle=True,
-    #                                 includeOriginals=True,
-    #                                 standaloneRecommendations=True)
-    generator.createSpotifyPlaylist(lastN=10, shuffle=True, includeOriginals=True)
+    generator.createYoutubePlaylist(
+        lastN=10,
+        shuffle=True,
+        includeOriginals=True,
+        standaloneRecommendations=True,
+    )
+    # generator.createSpotifyPlaylist(lastN=10, shuffle=True, includeOriginals=True)

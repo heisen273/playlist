@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict, AliasChoices
+from pydantic import BaseModel, Field, ConfigDict, AliasChoices, computed_field
+from pydantic.fields import FieldInfo
 
 from pydantic.functional_validators import BeforeValidator, AfterValidator
 from typing_extensions import Annotated
@@ -31,7 +32,6 @@ Duration = Annotated[
 
 
 class Track(BaseModel):
-
     model_config = ConfigDict(populate_by_name=True)
 
     # TODO:
@@ -72,11 +72,13 @@ class Track(BaseModel):
     def from_dict(cls, rawObject: dict) -> "Track":
         return cls(**rawObject)
 
+    @computed_field(title="artistName")
     @property
     def artistName(self) -> str:
         """Docstring for artistName"""
         return " ".join(self.artists)
 
+    @computed_field(title="firstArtistName")
     @property
     def firstArtistName(self) -> str:
         """Docstring for artistName"""
