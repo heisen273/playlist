@@ -404,8 +404,8 @@ logging-modules=logging
 
 [MESSAGES CONTROL]
 
-bad-continuation=no
-bad-continuation-format=fstring
+#bad-continuation=no
+#bad-continuation-format=fstring
 
 # Only show warnings with the listed confidence levels. Leave empty to show
 # all. Valid levels: HIGH, CONTROL_FLOW, INFERENCE, INFERENCE_FAILURE,

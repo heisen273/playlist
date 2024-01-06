@@ -1,19 +1,29 @@
+from __future__ import annotations
+
+import os
+import json
 import logging
 import random
-import pylast
+
+
 import requests
 from datetime import datetime
 from more_itertools import chunked
+from dotenv import load_dotenv
 
 # Integrations
 import spotipy
-from spotipy import CacheFileHandler
-from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
+from spotipy import CacheFileHandler, MemoryCacheHandler
+from spotipy.oauth2 import SpotifyOAuth
 from ytmusicapi import YTMusic
 
 # Models
-from model.Config import Config
-from model.Track import Track
+try:
+    from model.Track import Track
+    from model.User import User
+    from model.Platform import Platform
+except ModuleNotFoundError:
+    from model import Track, User, Platform
 
 # Constants
 from constants import (
@@ -22,9 +32,10 @@ from constants import (
     MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE,
     lastFMUrl,
     DEFAULT_TIMEOUT,
-    DEFAULT_PATH,
 )
 
+
+load_dotenv()
 logging.basicConfig(
     level=logging.INFO, format="[%(asctime)s] [%(levelname)s] %(message)s"
 )
@@ -42,37 +53,39 @@ class PlaylistGenerator:
     Also adds suggestions.
     """
 
-    def __init__(self, loadConfigFromDisk: bool = False) -> None:
-        # Init config.
-        self.config: Config = Config(loadFromDisk=loadConfigFromDisk)
-
-        # Init lastFM
-        self.lastfm = pylast.LastFMNetwork(
-            api_key=self.config.lastFMClientId,
-            api_secret=self.config.lastFMClientSecret,
-        )
-
+    def __init__(self, user: User | None = None) -> None:
+        self.user = user or User()
         # Init youtube.
-        self.youtube: YTMusic = YTMusic(self.config.youtubeAuthJson)
+        if self.user.youtubeAuth:
+            self.youtube: YTMusic = YTMusic(
+                auth=json.dumps(user.youtubeAuth), useCustomOauth=True
+            )
+        else:
+            self.youtube: YTMusic = YTMusic(
+                auth=Platform.YOUTUBE.defaultConfigPath, useCustomOauth=False
+            )
 
         # Init spotify.
-        spotifyCredentials = SpotifyClientCredentials(
-            client_id=self.config.spotifyClientId,
-            client_secret=self.config.spotifyClientSecret,
-        )
+        cache = CacheFileHandler(cache_path=Platform.SPOTIFY.defaultConfigPath)
+        if self.user.spotifyAuth:
+            cache = MemoryCacheHandler(
+                token_info={**user.spotifyAuth, "scope": " ".join(SPOTIFY_SCOPES)}
+            )
 
         self.spotify = spotipy.Spotify(
-            client_credentials_manager=spotifyCredentials,
             auth_manager=SpotifyOAuth(
                 open_browser=False,
-                client_id=self.config.spotifyClientId,
-                client_secret=self.config.spotifyClientSecret,
-                redirect_uri=self.config.redirectUrl,
                 scope=SPOTIFY_SCOPES,
-                cache_handler=CacheFileHandler(
-                    cache_path=f"{DEFAULT_PATH}/.spotify_cache"
-                ),
-            ),
+                cache_handler=cache,
+            )
+        )
+
+    def getYoutubePlaylists(self) -> list[dict]:
+        """Docstring for getYoutubePlaylists"""
+        return sorted(
+            self.youtube.get_library_playlists(),
+            key=lambda x: int(x.get("count", "0").replace(",", "")),
+            reverse=True,
         )
 
     def getLastYoutubeTracks(self, lastN: int = 10) -> list[Track]:
@@ -81,23 +94,13 @@ class PlaylistGenerator:
         """
         logger.info(f"Executing `getLastYoutubeTracks()`, fetching last {lastN} tracks")
 
-        # If the main YouTube playlist is not set in the configuration fetch it directly from YouTube.
-        if not self.config.mainYoutubePlaylist:
-            # Get all playlists & sort playlists by tracks count.
-            allPlaylists: list[dict] = sorted(
-                self.youtube.get_library_playlists(),
-                key=lambda x: int(x.get("count", "0").replace(",", "")),
-                reverse=True,
-            )
+        # To find out main youtube playlist, get all playlists & sort playlists by tracks count.
+        allPlaylists: list[dict] = self.getYoutubePlaylists()
+        # Assume that biggest playlist is the main one.
+        playlistId = allPlaylists[0]["playlistId"]
+        mainPlaylist: dict = self.youtube.get_playlist(playlistId=playlistId)
 
-            # Assume that biggest playlist is the main one.
-            self.config.mainYoutubePlaylist = allPlaylists[0]["playlistId"]
-
-        mainPlaylist: dict = self.youtube.get_playlist(
-            playlistId=self.config.mainYoutubePlaylist
-        )
-
-        # Override spotifyArtistId, since it's youtube-only tracks.
+        # Get `lastN` tracks from this playlist & override spotifyArtistId, since it's youtube-only tracks.
         tracks: list[Track] = [
             Track(**rawTrack, spotifyArtistId=None)
             for rawTrack in mainPlaylist.get("tracks", [])[:lastN]
@@ -315,7 +318,7 @@ class PlaylistGenerator:
             url: str = lastFMUrl.format(
                 artist=track.firstArtistName,
                 title=track.title,
-                apiKey=self.config.lastFMClientId,
+                apiKey=os.environ.get("LASTFM_CLIENT_ID"),
             )
             try:
                 result: dict = requests.get(url, timeout=DEFAULT_TIMEOUT).json()
@@ -365,34 +368,48 @@ class PlaylistGenerator:
         pass
 
     def createSpotifyPlaylist(
-        self, lastN: int = 10, shuffle: bool = False, includeOriginals: bool = False
+        self,
+        lastN: int = 10,
+        shuffle: bool = True,
+        includeOriginals: bool = True,
     ) -> str:
         """
         <useful doc-string>
         """
 
         # Get last tracks from YouTube & fulfill them with `.spotifyId`
-        lasSpotifyTracks: list[Track] = self.getLastSpotifyTracks(lastN=lastN)
-        self.fillYoutubeId(tracks=lasSpotifyTracks)
+        lastSpotifyTracks: list[Track] = self.getLastSpotifyTracks(lastN=lastN)
+        self.fillYoutubeId(tracks=lastSpotifyTracks)
+
+        lastYoutubeTracks: list[Track] = []
+        if self.user.youtubeAuth:
+            lastYoutubeTracks = self.getLastYoutubeTracks(lastN=lastN)
+            self.fillSpotifyId(tracks=lastYoutubeTracks)
 
         # Get youtube recommendations based on `lastYoutubeTracks`.
         recommendedTracks: list[Track] = self.getYoutubeRecommendations(
-            lasSpotifyTracks
+            lastSpotifyTracks + lastYoutubeTracks
         )
 
         # Get lastFM recommendations based on Spotify tracks.
-        recommendedTracks += self.getLastFMRecommendations(tracks=recommendedTracks)
-        #
+        recommendedTracks += self.getLastFMRecommendations(
+            tracks=recommendedTracks or lastSpotifyTracks + lastYoutubeTracks
+        )
+
         # Fulfill all recommendations with `.youtubeId`.
         self.fillSpotifyId(tracks=recommendedTracks)
 
         # Prepare a list of spotify tracks. Include original tracks if needed.
         if includeOriginals:
-            recommendedTracks += lasSpotifyTracks
+            recommendedTracks += lastSpotifyTracks + lastYoutubeTracks
 
         spotifyTracks: list[str] = [
-            f"https://open.spotify.com/track/{x.spotifyId}" for x in recommendedTracks
+            f"https://open.spotify.com/track/{x.spotifyId}"
+            for x in recommendedTracks
+            if x.spotifyId
         ]
+        # Remove duplicates.
+        spotifyTracks = list(set(spotifyTracks))
 
         # Shuffle tracks if needed.
         if shuffle:
@@ -402,13 +419,11 @@ class PlaylistGenerator:
         logger.info(f"Creating playlist with {len(spotifyTracks)} tracks")
 
         # First create a playlist
-        if not self.config.spotifyUserId:
-            self.config.spotifyUserId = self.spotify.current_user()["id"]
         playlistName: str = datetime.now().strftime("%d %b %H:%M")
         playlist: dict = self.spotify.user_playlist_create(
-            user=self.config.spotifyUserId,
+            user=self.spotify.current_user()["id"],
             name=playlistName,
-            description="my test",
+            description="Created by Playlist Generator Bot, @spotify_youtube_playlist_bot",
         )
         # Then fill it with tracks, 100tracks at a time.
         for tracksChunk in chunked(spotifyTracks, MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE):
@@ -421,9 +436,9 @@ class PlaylistGenerator:
     def createYoutubePlaylist(
         self,
         lastN: int = 10,
-        shuffle: bool = False,
-        includeOriginals: bool = False,
-        standaloneRecommendations: bool = False,
+        shuffle: bool = True,
+        includeOriginals: bool = True,
+        standaloneRecommendations: bool = True,
     ) -> str:
         """
         <useful doc-string>
@@ -432,8 +447,17 @@ class PlaylistGenerator:
         lastYoutubeTracks: list[Track] = self.getLastYoutubeTracks(lastN=lastN)
         self.fillSpotifyId(tracks=lastYoutubeTracks)
 
+        lastSpotifyTracks: list[Track] = []
+        if self.user.spotifyAuth:
+            lastSpotifyTracks = self.getLastSpotifyTracks(lastN=lastN)
+            self.fillYoutubeId(tracks=lastSpotifyTracks)
+
         # Get spotify recommendations based on `lastYoutubeTracks`.
-        getSpotifyRecommendationsParams: dict = {"tracks": lastYoutubeTracks}
+        recommendedTracks = []
+        # if self.user.spotifyAuth:
+        getSpotifyRecommendationsParams: dict = {
+            "tracks": lastYoutubeTracks + lastSpotifyTracks
+        }
         if standaloneRecommendations:
             getSpotifyRecommendationsParams["recommendationChunkSize"] = 1
         recommendedTracks: list[Track] = self.getSpotifyRecommendations(
@@ -441,18 +465,23 @@ class PlaylistGenerator:
         )
 
         # Get lastFM recommendations based on Spotify tracks.
-        recommendedTracks += self.getLastFMRecommendations(tracks=recommendedTracks)
-
+        recommendedTracks += self.getLastFMRecommendations(
+            tracks=recommendedTracks or lastYoutubeTracks + lastSpotifyTracks
+        )
         # Fulfill all recommendations with `.youtubeId`.
         self.fillYoutubeId(tracks=recommendedTracks)
+        # Include original tracks if needed.
+        if includeOriginals:
+            recommendedTracks += lastSpotifyTracks + lastYoutubeTracks
+
         # Prepare a list of youtube track ids.
         youtubeTracks: list[str] = [
             x.youtubeId for x in recommendedTracks if x.youtubeId
         ]
 
-        # Include original tracks if needed.
-        if includeOriginals:
-            youtubeTracks += [x.youtubeId for x in lastYoutubeTracks if x.youtubeId]
+        # Remove duplicates.
+        youtubeTracks = list(set(youtubeTracks))
+
         # Shuffle tracks if needed.
         if shuffle:
             random.shuffle(youtubeTracks)
@@ -461,7 +490,9 @@ class PlaylistGenerator:
         logger.info(f"Creating playlist with {len(youtubeTracks)} tracks")
         playlistName: str = datetime.now().strftime("%d %b %H:%M")
         playlistId: str = self.youtube.create_playlist(
-            title=playlistName, description="my test", video_ids=youtubeTracks
+            video_ids=youtubeTracks,
+            title=playlistName,
+            description="Created by Playlist Generator Bot, @spotify_youtube_playlist_bot",
         )
 
         return f"https://music.youtube.com/playlist?list={playlistId}"
@@ -470,10 +501,11 @@ class PlaylistGenerator:
 if __name__ == "__main__":
     generator = PlaylistGenerator()
     # generator.createYoutubePlaylist()
-    generator.createYoutubePlaylist(
-        lastN=10,
+    playlistUrl = generator.createYoutubePlaylist(
+        lastN=1,
         shuffle=True,
         includeOriginals=True,
         standaloneRecommendations=True,
     )
+    print(playlistUrl)
     # generator.createSpotifyPlaylist(lastN=10, shuffle=True, includeOriginals=True)

@@ -1,7 +1,15 @@
 import json
+from datetime import datetime
+
+import pytest
 from pathlib import Path
+from unittest.mock import Mock, patch
+
+import constants
 from model.Track import Track
 from model.Config import Config
+from model.Platform import Platform, getSpotifyAuthUrl, getYoutubeAuthUrl
+from model.User import User
 
 
 # TODO:
@@ -143,3 +151,162 @@ def test_configStoring(tmp_path: Path) -> None:
     # All other 9 keys are `None`
     assert not any(storedConfigData.values())
     assert len(storedConfigData.values()) == 10
+
+
+def test_authKey():
+    """Test for authKey property"""
+    assert Platform.SPOTIFY.authKey == "spotifyAuth"
+    assert Platform.YOUTUBE.authKey == "youtubeAuth"
+
+
+def test_defaultConfigPath():
+    """Test for defaultConfigPath property"""
+    with patch.object(constants, "DEFAULT_PATH", "path/to/config"):
+        assert Platform.SPOTIFY.defaultConfigPath == "path/to/config/_spotify.json"
+        assert Platform.YOUTUBE.defaultConfigPath == "path/to/config/_youtube.json"
+
+
+def test_successfulAuthText():
+    """Test for successfulAuthText property"""
+    assert Platform.SPOTIFY.successfulAuthText == "Successfully authorized Spotify!"
+    assert Platform.YOUTUBE.successfulAuthText == "Successfully authorized Youtube!"
+
+
+def test_isAuthorized():
+    """Test for isAuthorized method"""
+    userMock = Mock()
+    userMock.spotifyAuth = True
+    assert Platform.SPOTIFY.isAuthorized(userMock)
+
+    userMock.spotifyAuth = False
+    assert not Platform.SPOTIFY.isAuthorized(userMock)
+
+
+def test_authButtonText():
+    """Test for authButtonText method"""
+    userMock = Mock()
+    userMock.spotifyAuth = True
+    assert Platform.SPOTIFY.authButtonText(userMock) == "✅ Authorized Spotify"
+
+    userMock.spotifyAuth = False
+    assert Platform.SPOTIFY.authButtonText(userMock) == "Authorize Spotify"
+
+
+@patch("model.Platform.getSpotifyAuthUrl")
+def test_getAuthButtonParams(mock_get_spotify_auth_url):
+    """Test for getAuthButtonParams method"""
+    userMock = Mock()
+    update_mock = Mock()
+    userMock.spotifyAuth = True
+    expected_params = {"text": "✅ Authorized Spotify", "callback_data": "auth_spotify"}
+    assert (
+        Platform.SPOTIFY.getAuthButtonParams(userMock, update_mock) == expected_params
+    )
+
+    userMock.spotifyAuth = False
+    mock_get_spotify_auth_url.return_value = "auth_url"
+    expected_params = {"text": "Authorize Spotify", "url": "auth_url"}
+    assert (
+        Platform.SPOTIFY.getAuthButtonParams(userMock, update_mock) == expected_params
+    )
+
+
+def test_getGeneratePlaylistButton():
+    """Test for getGeneratePlaylistButton method"""
+    userMock = Mock()
+    userMock.spotifyAuth = True
+    button = Platform.SPOTIFY.getGeneratePlaylistButton(userMock)
+    assert button.text == "✅ Publish on Spotify"
+    assert button.callback_data == "generate_playlist_spotify"
+
+    userMock.spotifyAuth = False
+    button = Platform.SPOTIFY.getGeneratePlaylistButton(userMock)
+    assert button.text == "Publish on Spotify"
+    assert button.callback_data == "generate_playlist_spotify"
+
+
+# Test for authCommandMessageText method
+def test_authCommandMessageText():
+    userMock = Mock()
+    userMock.spotifyAuth = True
+    assert (
+        Platform.SPOTIFY.authCommandMessageText(userMock)
+        == "You've already authorized Spotify! If you want to re-auth, click the button below: "
+    )
+
+    userMock.spotifyAuth = False
+    assert (
+        Platform.SPOTIFY.authCommandMessageText(userMock)
+        == "Click the button below to authorize Spotify:"
+    )
+
+
+def test_getAuthUrlMethod():
+    """Test for getAuthUrlMethod method"""
+    assert Platform.SPOTIFY.getAuthUrlMethod() == getSpotifyAuthUrl
+    assert Platform.YOUTUBE.getAuthUrlMethod() == getYoutubeAuthUrl
+
+
+@pytest.mark.asyncio
+async def test_createPlaylist():
+    """Test for createPlaylist method"""
+    playlistGenerator = Mock()
+    playlistGenerator.createSpotifyPlaylist.return_value = "spotify_playlist_url"
+    playlistGenerator.createYoutubePlaylist.return_value = "youtube_playlist_url"
+
+    result = await Platform.SPOTIFY.createPlaylist(playlistGenerator, 10)
+    assert result == "spotify_playlist_url"
+    playlistGenerator.createSpotifyPlaylist.assert_called_once_with(lastN=10)
+
+
+def test_UserDefaultFieldValues():
+    """
+    Test that default values for User fields are correctly set.
+    """
+    user = User()
+    assert user.userId is None
+    assert user.userName is None
+    assert user.messages == 0
+    assert not user.inProgress
+    assert user.spotifyAuth is None
+    assert user.youtubeAuth is None
+    assert isinstance(user.created, datetime)
+    assert isinstance(user.updated, datetime)
+
+
+def test_UserFieldAliases():
+    """
+    Test that field aliases are correctly mapped in the User model.
+    """
+    userData = {
+        "userId": "test_id",
+        "username": "test_name",
+        "messages": 5,
+        "inProgress": True,
+        "_created": datetime(2020, 1, 1),
+        "_updated": datetime(2020, 1, 2),
+    }
+    user = User(**userData)
+    assert user.userId == "test_id"
+    assert user.userName == "test_name"
+    assert user.messages == 5
+    assert user.inProgress
+    assert user.created == datetime(2020, 1, 1)
+    assert user.updated == datetime(2020, 1, 2)
+
+
+def test_UserFromDict():
+    """
+    Test that the from_dict class method correctly creates a User instance from a dictionary.
+    """
+    userData = {
+        "userId": "user123",
+        "username": "user_name",
+        "messages": 10,
+        "inProgress": False,
+    }
+    user = User.from_dict(userData)
+    assert user.userId == "user123"
+    assert user.userName == "user_name"
+    assert user.messages == 10
+    assert not user.inProgress

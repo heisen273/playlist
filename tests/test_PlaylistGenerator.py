@@ -1,4 +1,4 @@
-from core import main
+from core.generator import PlaylistGenerator
 from model.Track import Track
 
 rawTracks: list[dict] = [
@@ -12,7 +12,7 @@ rawTracks: list[dict] = [
         "spotifyArtistId": ["5K4W6rqBFWDnAN6FQUkS6x", "0ONHkAv9pCAFxb0zJwDNTy"],
     }
 ]
-generator = main.PlaylistGenerator(loadConfigFromDisk=True)
+generator = PlaylistGenerator()
 
 
 def test_getLastYoutubeTracks():

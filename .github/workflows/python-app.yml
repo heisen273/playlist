@@ -43,14 +43,16 @@ jobs:
         pylint --function-naming-style=any --argument-naming-style=any $(git ls-files 'tests/')
     - name: Pytest
       env:
-        CONFIG_JSON: ${{ secrets.CONFIG_JSON }}
         YOUTUBE_JSON: ${{ secrets.YOUTUBE_JSON }}
         SPOTIFY_JSON: ${{ secrets.SPOTIFY_JSON }}
+        FIREBASE_JSON: ${{ secrets.FIREBASE_JSON }}
+        ENV_FILE: ${{ secrets.ENV_FILE }}
       run: |
         # Write github secret to a file: app .config.json, youtube .oauth.json & .spotify_cache
-        eval "echo $CONFIG_JSON" >> $GITHUB_WORKSPACE/.config.json
-        eval "echo $YOUTUBE_JSON" >> $GITHUB_WORKSPACE/.oauth.json
-        eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/.spotify_cache
+        eval "echo $YOUTUBE_JSON" >> $GITHUB_WORKSPACE/_youtube.json
+        eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/_spotify.json
+        eval "echo $FIREBASE_JSON" >> $GITHUB_WORKSPACE/_firebase.json
+        eval "echo $ENV_FILE" >> $GITHUB_WORKSPACE/.env
 
         pytest -v --cov
 
