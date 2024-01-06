@@ -15,7 +15,7 @@ from telegram.ext import (
 
 try:
     from model.User import User
-except:
+except ModuleNotFoundError:
     from model import User
 
 from handlers import (
