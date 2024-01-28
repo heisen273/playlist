@@ -9,5 +9,4 @@ setup(
     author="heisen273",
     author_email="",
     description="Playlist generation",
-    install_requires=['playlist @ https://github.com/heisen273/playlist/archive/master.zip']
 )
