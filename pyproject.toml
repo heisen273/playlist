@@ -2,7 +2,7 @@
 name = "playlist"
 version = "0.1.1"
 authors = [
-  { name="heisen273", email="f0xkid@ukr.net" },
+  { name = "heisen273", email = "f0xkid@ukr.net" },
 ]
 description = "Playlist generator"
 readme = "README.md"
