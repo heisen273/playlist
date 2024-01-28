@@ -30,7 +30,7 @@ pytest-asyncio = "0.23.3"
 
 [tool.poetry.build]
 packages = [
-  { include = "*.py", exclude = ["tests/*"] }
+  { include = "*.py", exclude = ["tests/*"] },
   { include = "*/**/.py", exclude = ["tests/*"] }
 ]
 
