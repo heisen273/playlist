@@ -13,6 +13,10 @@ requires-python = ">=3.11"
 find = {}
 
 
+[tool.setuptools.package-data]
+"*" = ["**.py"]
+
+
 [tool.poetry.dependencies]
 python = "^3.11"
 CherryPy= "18.9.0"
