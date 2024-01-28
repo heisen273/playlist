@@ -4,10 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["heisen273 <f0xkid@ukr.net>"]
 readme = "README.md"
-packages = [
-  { include = "core" },
-  { include = "model" },
-]
+# packages = [
+#   { include = "core" },
+#   { include = "model" },
+# ]
 
 [tool.poetry.dependencies]
 python = "^3.11"
