@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "playlist"
+version = "0.1.0"
+description = ""
+authors = ["heisen273 <f0xkid@ukr.net>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
