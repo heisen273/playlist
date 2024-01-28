@@ -1,15 +1,13 @@
-[tool.poetry]
+[project]
 name = "playlist"
-version = "0.1.0"
-description = ""
-authors = ["heisen273 <f0xkid@ukr.net>"]
+version = "0.1.1"
+authors = [
+  { name="heisen273", email="f0xkid@ukr.net" },
+]
+description = "Playlist generator"
 readme = "README.md"
-# packages = [
-#   { include = "playlist" },
-#   # { include = "model" },
-#   { include = "*.py" },
-#   { include = "/**/*.py" },
-# ]
+requires-python = ">=3.11"
+
 
 [tool.setuptools.packages]
 find = {}
