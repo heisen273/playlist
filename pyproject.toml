@@ -28,11 +28,11 @@ typing_extensions = "4.8.0"
 pytest-asyncio = "0.23.3"
 # ytmusicapi = "git+https://github.com/heisen273/ytmusicapi.git@ef0837efdd4d769dd6c3294eac986150aa756254"
 
-# [tool.poetry.build]
-# packages = [
-#   { include = "*.py", exclude = ["tests/*"] },
-#   { include = "*/**/.py", exclude = ["tests/*"] }
-# ]
+[tool.poetry.build]
+packages = [
+  { include = "*.py", exclude = ["tests/*"] },
+  { include = "*/**/.py", exclude = ["tests/*"] }
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
