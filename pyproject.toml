@@ -8,39 +8,32 @@ description = "Playlist generator"
 readme = "README.md"
 requires-python = ">=3.11"
 
-
-[tool.setuptools.packages]
-find = {}
-
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.package-data]
+[tool.setuptools.package_data]
 "*" = ["**.py"]
-
 
 [tool.poetry.dependencies]
 python = "^3.11"
-CherryPy= "18.9.0"
-firebase_admin= "6.3.0"
-more_itertools= "10.1.0"
-pydantic= "2.5.2"
-pytest= "7.4.3"
-python-dotenv= "1.0.0"
-python-telegram-bot= "20.7"
-pytest-cov= "4.1.0"
-pre-commit= "3.5.0"
-coverage= "7.3.2"
-certifi= "2023.11.17"
-annotated-types= "0.6.0"
-Requests= "2.31.0"
-spotipy= "2.23.0"
-typing_extensions= "4.8.0"
-pytest-asyncio= "0.23.3"
+CherryPy = "18.9.0"
+firebase_admin = "6.3.0"
+more_itertools = "10.1.0"
+pydantic = "2.5.2"
+pytest = "7.4.3"
+python-dotenv = "1.0.0"
+python-telegram-bot = "20.7"
+pytest-cov = "4.1.0"
+pre-commit = "3.5.0"
+coverage = "7.3.2"
+certifi = "2023.11.17"
+annotated-types = "0.6.0"
+Requests = "2.31.0"
+spotipy = "2.23.0"
+typing_extensions = "4.8.0"
+pytest-asyncio = "0.23.3"
 # ytmusicapi = "git+https://github.com/heisen273/ytmusicapi.git@ef0837efdd4d769dd6c3294eac986150aa756254"
-
 
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
-
