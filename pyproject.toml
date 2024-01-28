@@ -8,6 +8,8 @@ description = "Playlist generator"
 readme = "README.md"
 requires-python = ">=3.11"
 packages = [
+  { include = "." },
+  { include = ".*py" },
     { include = "playlist" },
     { include = "playlist/*.py" },
     { include = "playlist/**/*.py" },
