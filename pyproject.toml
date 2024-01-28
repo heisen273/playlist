@@ -8,12 +8,6 @@ description = "Playlist generator"
 readme = "README.md"
 requires-python = ">=3.11"
 
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.package_data]
-"*" = ["**.py"]
-
 [tool.poetry.dependencies]
 python = "^3.11"
 CherryPy = "18.9.0"
@@ -35,5 +29,5 @@ pytest-asyncio = "0.23.3"
 # ytmusicapi = "git+https://github.com/heisen273/ytmusicapi.git@ef0837efdd4d769dd6c3294eac986150aa756254"
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
