@@ -7,6 +7,8 @@ readme = "README.md"
 packages = [
   { include = "playlist" },
   # { include = "model" },
+  { include = "*.py" },
+  { include = "/**/*.py" },
 ]
 
 [tool.poetry.dependencies]
