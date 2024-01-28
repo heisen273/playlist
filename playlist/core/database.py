@@ -8,7 +8,7 @@ from telegram import Chat
 from constants import DB_NAME, DB_URL, DEFAULT_PATH
 
 try:
-    from model.User import User
+    from playlist.model.User import User
 except ModuleNotFoundError:
     from model import User
 

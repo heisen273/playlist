@@ -2,7 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict
 
 try:
-    from model.Platform import Platform
+    from playlist.model.Platform import Platform
 except ModuleNotFoundError:
     from model import Platform
 

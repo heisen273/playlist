@@ -1,5 +1,5 @@
-from core.generator import PlaylistGenerator
-from model.Track import Track
+from playlist.core.generator import PlaylistGenerator
+from playlist.model.Track import Track
 
 rawTracks: list[dict] = [
     {

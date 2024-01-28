@@ -14,9 +14,9 @@ from telegram.ext import CallbackContext
 
 # In-house
 try:
-    from model.User import User
-    from model.Platform import Platform
-    from model.Track import Track
+    from playlist.model.Track import Track
+    from playlist.model.User import User
+    from playlist.model.Platform import Platform
 except ModuleNotFoundError:
     from model import User, Platform, Track
 

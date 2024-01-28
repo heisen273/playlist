@@ -10,8 +10,8 @@ from typing import Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     try:
-        from core.generator import PlaylistGenerator
-        from model.User import User
+        from playlist.core.generator import PlaylistGenerator
+        from playlist.model.User import User
     except ModuleNotFoundError:
         from generator import PlaylistGenerator
         from model import User
