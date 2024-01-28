@@ -1,4 +1,4 @@
-[project]
+[tool.poetry]
 name = "playlist"
 version = "0.1.1"
 authors = [
