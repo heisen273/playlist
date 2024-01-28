@@ -5,8 +5,8 @@ description = ""
 authors = ["heisen273 <f0xkid@ukr.net>"]
 readme = "README.md"
 packages = [
-  { include = "playlist" },
-  { include = "playlist/**/*.py" },
+  { include = "core" },
+  { include = "model" },
 ]
 
 [tool.poetry.dependencies]
