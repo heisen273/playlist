@@ -6,10 +6,10 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import constants
-from model.Track import Track
-from model.Config import Config
-from model.Platform import Platform, getSpotifyAuthUrl, getYoutubeAuthUrl
-from model.User import User
+from playlist.model.Track import Track
+from playlist.model.Config import Config
+from playlist.model.Platform import Platform, getSpotifyAuthUrl, getYoutubeAuthUrl
+from playlist.model.User import User
 
 
 # TODO:

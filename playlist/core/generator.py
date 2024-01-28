@@ -19,9 +19,9 @@ from ytmusicapi import YTMusic
 
 # Models
 try:
-    from model.Track import Track
-    from model.User import User
-    from model.Platform import Platform
+    from playlist.model.Track import Track
+    from playlist.model.User import User
+    from playlist.model.Platform import Platform
 except ModuleNotFoundError:
     from model import Track, User, Platform
 

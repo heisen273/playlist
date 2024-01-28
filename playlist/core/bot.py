@@ -14,7 +14,7 @@ from telegram.ext import (
 )
 
 try:
-    from model.User import User
+    from playlist.model.User import User
 except ModuleNotFoundError:
     from model import User
 
