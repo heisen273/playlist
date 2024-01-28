@@ -4,12 +4,16 @@ version = "0.1.0"
 description = ""
 authors = ["heisen273 <f0xkid@ukr.net>"]
 readme = "README.md"
-packages = [
-  { include = "playlist" },
-  # { include = "model" },
-  { include = "*.py" },
-  { include = "/**/*.py" },
-]
+# packages = [
+#   { include = "playlist" },
+#   # { include = "model" },
+#   { include = "*.py" },
+#   { include = "/**/*.py" },
+# ]
+
+[tool.setuptools.packages]
+find = {}
+
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -33,6 +37,6 @@ pytest-asyncio= "0.23.3"
 
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
