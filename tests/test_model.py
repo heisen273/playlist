@@ -5,7 +5,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import constants
+from playlist import constants
 from playlist.model.Track import Track
 from playlist.model.Config import Config
 from playlist.model.Platform import Platform, getSpotifyAuthUrl, getYoutubeAuthUrl
@@ -192,7 +192,7 @@ def test_authButtonText():
     assert Platform.SPOTIFY.authButtonText(userMock) == "Authorize Spotify"
 
 
-@patch("model.Platform.getSpotifyAuthUrl")
+@patch("playlist.model.Platform.getSpotifyAuthUrl")
 def test_getAuthButtonParams(mock_get_spotify_auth_url):
     """Test for getAuthButtonParams method"""
     userMock = Mock()

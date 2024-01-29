@@ -2,7 +2,11 @@ import json
 import logging
 from pathlib import Path
 from pydantic import BaseModel, ConfigDict
-from constants import DEFAULT_PATH, DEFAULT_CONFIG_FILE
+
+try:
+    from playlist.constants import DEFAULT_PATH, DEFAULT_CONFIG_FILE
+except:
+    from constants import DEFAULT_PATH, DEFAULT_CONFIG_FILE
 
 
 logging.basicConfig(
@@ -12,7 +16,6 @@ logger: logging.Logger = logging.getLogger()
 
 
 class Config(BaseModel):
-
     model_config = ConfigDict(populate_by_name=True)
 
     def __init__(
