@@ -17,20 +17,30 @@ try:
     from playlist.model.Track import Track
     from playlist.model.User import User
     from playlist.model.Platform import Platform
+    from playlist.constants import (
+        GENERATE_PLAYLIST,
+        LAST_N_ROW,
+        LAST_N_PREFIX,
+        SELECTOR,
+        SEPARATOR,
+        EXTRA_SETTINGS,
+        AUTH,
+    )
 except ModuleNotFoundError:
     from model import User, Platform, Track
+    from constants import (
+        GENERATE_PLAYLIST,
+        LAST_N_ROW,
+        LAST_N_PREFIX,
+        SELECTOR,
+        SEPARATOR,
+        EXTRA_SETTINGS,
+        AUTH,
+    )
 
 import database
 from generator import PlaylistGenerator
-from constants import (
-    GENERATE_PLAYLIST,
-    LAST_N_ROW,
-    LAST_N_PREFIX,
-    SELECTOR,
-    SEPARATOR,
-    EXTRA_SETTINGS,
-    AUTH,
-)
+
 
 bot = telegram.Bot(token=os.environ["BOT_TOKEN"])
 

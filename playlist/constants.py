@@ -1,7 +1,7 @@
 import os
 
 try:
-    from model.Platform import Platform
+    from playlist.model.Platform import Platform
 except:
     from model import Platform
 

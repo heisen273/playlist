@@ -22,17 +22,24 @@ try:
     from playlist.model.Track import Track
     from playlist.model.User import User
     from playlist.model.Platform import Platform
+    from playlist.constants import (
+        SPOTIFY_SCOPES,
+        MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE,
+        MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE,
+        lastFMUrl,
+        DEFAULT_TIMEOUT,
+    )
 except ModuleNotFoundError:
     from model import Track, User, Platform
+    from constants import (
+        SPOTIFY_SCOPES,
+        MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE,
+        MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE,
+        lastFMUrl,
+        DEFAULT_TIMEOUT,
+    )
 
 # Constants
-from constants import (
-    SPOTIFY_SCOPES,
-    MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE,
-    MAX_SPOTIFY_RECOMMENDATION_CHUNK_SIZE,
-    lastFMUrl,
-    DEFAULT_TIMEOUT,
-)
 
 
 load_dotenv()

@@ -23,6 +23,7 @@ class Platform(StrEnum):
 
     @property
     def name(self) -> str:
+        """<useful doc-string>"""
         return self.value.capitalize()
 
     @property
@@ -34,12 +35,17 @@ class Platform(StrEnum):
 
     @property
     def defaultConfigPath(self) -> str:
-        from constants import DEFAULT_PATH
+        """<useful doc-string>"""
+        try:
+            from playlist.constants import DEFAULT_PATH
+        except ModuleNotFoundError:
+            from constants import DEFAULT_PATH
 
         return f"{DEFAULT_PATH}/_{self}.json"
 
     @property
     def successfulAuthText(self) -> str:
+        """<useful doc-string>"""
         return f"Successfully authorized {self.name}!"
 
     def isAuthorized(self, user: User) -> bool:
@@ -59,6 +65,7 @@ class Platform(StrEnum):
         return f"Authorize {self.name}"
 
     def getAuthButtonParams(self, user: User, update: Update) -> dict:
+        """<useful doc-string>"""
         if self.isAuthorized(user):
             return {
                 "text": f"✅ Authorized {self.name}",
@@ -92,7 +99,7 @@ class Platform(StrEnum):
         return f"Click the button below to authorize {self.name}:"
 
     def getAuthUrlMethod(self) -> Callable:
-        # <useful doc-string>
+        """<useful doc-string>"""
         match self:
             case Platform.SPOTIFY:
                 return getSpotifyAuthUrl
@@ -123,7 +130,10 @@ class Platform(StrEnum):
 
 def getSpotifyAuthUrl(update: Update, user: User) -> str:
     """Docstring for getSpotifyAuthUrl"""
-    from constants import SPOTIFY_SCOPES
+    try:
+        from playlist.constants import SPOTIFY_SCOPES
+    except ModuleNotFoundError:
+        from constants import SPOTIFY_SCOPES
 
     cache = CacheFileHandler(cache_path=Platform.SPOTIFY.defaultConfigPath)
     if user.spotifyAuth:
@@ -140,10 +150,14 @@ def getSpotifyAuthUrl(update: Update, user: User) -> str:
     return f"{spotifyUrl}&state={update.effective_chat.id}"
 
 
-def getYoutubeAuthUrl(update: Update, *args, **kwargs) -> str:
+def getYoutubeAuthUrl(update: Update, *_, **__) -> str:
     """Docstring for getSpotifyAuthUrl"""
     client_id = os.environ["YOUTUBE_CLIENT_ID"]
     redirect_uri = os.environ["YOUTUBE_REDIRECT_URI"]
-    authUrl = f"https://accounts.google.com/o/oauth2/auth?prompt=consent&access_type=offline&response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope=https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly"
+    authUrl = (
+        f"https://accounts.google.com/o/oauth2/auth?prompt=consent&access_type=offline&response_type=code"
+        f"&client_id={client_id}&redirect_uri={redirect_uri}"
+        f"&scope=https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.readonly"
+    )
 
     return f"{authUrl}&state={update.effective_chat.id}_youtube"
