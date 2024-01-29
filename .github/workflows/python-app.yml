@@ -49,10 +49,10 @@ jobs:
         ENV_FILE: ${{ secrets.ENV_FILE }}
       run: |
         # Write github secret to a file: app .config.json, youtube .oauth.json & .spotify_cache
-        eval "echo $YOUTUBE_JSON" >> $GITHUB_WORKSPACE/_youtube.json
-        eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/_spotify.json
-        eval "echo $FIREBASE_JSON" >> $GITHUB_WORKSPACE/_firebase.json
-        eval "echo $ENV_FILE" >> $GITHUB_WORKSPACE/.env
+        eval "echo $YOUTUBE_JSON" >> $GITHUB_WORKSPACE/playlist/_youtube.json
+        eval "echo $SPOTIFY_JSON" >> $GITHUB_WORKSPACE/playlist/_spotify.json
+        eval "echo $FIREBASE_JSON" >> $GITHUB_WORKSPACE/playlist/_firebase.json
+        eval "echo $ENV_FILE" >> $GITHUB_WORKSPACE/playlist/.env
 
         pytest -v --cov
 
