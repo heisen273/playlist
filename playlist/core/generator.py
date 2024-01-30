@@ -109,11 +109,25 @@ class PlaylistGenerator:
 
         # Get `lastN` tracks from this playlist & override spotifyArtistId, since it's youtube-only tracks.
         tracks: list[Track] = [
-            Track(**rawTrack, spotifyArtistId=None)
+            self.parseYoutubeTrack(rawTrack)
             for rawTrack in mainPlaylist.get("tracks", [])[:lastN]
         ]
 
         return tracks
+
+    def parseSpotifyTrack(self, rawTrack: dict) -> Track:
+        """Docstring for parseSpotifyTracks"""
+        return Track(
+            **rawTrack, image=rawTrack["album"].get("images", []), youtubeArtistId=None
+        )
+
+    def parseYoutubeTrack(self, rawTrack: dict) -> Track:
+        """Docstring for parseYoutubeTracks"""
+        return Track(
+            **rawTrack,
+            image=rawTrack.get("thumbnails", []) or rawTrack.get("thumbnail", []),
+            spotifyArtistId=None,
+        )
 
     def getLastSpotifyTracks(self, lastN: int = 10) -> list[Track]:
         """
@@ -125,7 +139,7 @@ class PlaylistGenerator:
 
         # Override youtubeArtistId, since it's spotify-only tracks.
         tracks: list[Track] = [
-            Track(**rawTrack["track"], youtubeArtistId=None)
+            self.parseSpotifyTrack(rawTrack["track"])
             for rawTrack in rawTracks.get("items", [])[:lastN]
         ]
 
@@ -209,7 +223,7 @@ class PlaylistGenerator:
 
         # Fetch results from spotify.
         searchResults: list[Track] = [
-            Track(**searchResult, spotifyArtistId=None)
+            self.parseYoutubeTrack(searchResult)
             for searchResult in self.youtube.search(
                 query=searchQuery, filter="songs", limit=5
             )[:5]
@@ -252,7 +266,7 @@ class PlaylistGenerator:
                     break
 
                 # Override spotifyArtistId, since it's youtube-only recommendations.
-                recommendedTrack = Track(**rawTrack, spotifyArtistId=None)
+                recommendedTrack = self.parseYoutubeTrack(rawTrack=rawTrack)
 
                 if recommendedTrack.youtubeId not in [
                     x.youtubeId for x in recommendedTracks
@@ -289,8 +303,7 @@ class PlaylistGenerator:
 
             for rawTrack in result.get("tracks", []):
                 # Override youtubeArtistId, since it's spotify-only recommendations.
-                recommendedTrack = Track(**rawTrack, youtubeArtistId=None)
-
+                recommendedTrack = self.parseSpotifyTrack(rawTrack)
                 recommendedTracks.append(recommendedTrack)
 
         return recommendedTracks

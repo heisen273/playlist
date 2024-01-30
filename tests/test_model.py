@@ -20,6 +20,7 @@ rawSpotifyTrack = {
     "id": "spotify_track_id",
     "name": "Spotify Track",
     "artists": [{"id": "spotify_artist_id", "name": "Spotify Artist"}],
+    "album": {"images": [{"height": 100, "width": 100, "url": "image.url"}]},
     "duration_ms": 300000,  # 5 minutes
 }
 
@@ -62,7 +63,11 @@ rawConfig = {
 
 def test_spotifyTrackParsing() -> None:
     """Test for parsing raw Spotify track"""
-    spotifyTrack = Track(**rawSpotifyTrack, youtubeArtistId=None)
+    spotifyTrack = Track(
+        **rawSpotifyTrack,
+        image=rawSpotifyTrack["album"].get("images", []),
+        youtubeArtistId=None,
+    )
 
     assert spotifyTrack.spotifyId == "spotify_track_id"
     assert spotifyTrack.title == "Spotify Track"
@@ -70,6 +75,7 @@ def test_spotifyTrackParsing() -> None:
     assert spotifyTrack.artistName == "Spotify Artist"
     assert spotifyTrack.firstArtistName == "Spotify Artist"
     assert spotifyTrack.duration == 300  # seconds
+    assert spotifyTrack.image == "image.url"
 
     assert not spotifyTrack.youtubeId
     assert not spotifyTrack.youtubeArtistId
@@ -77,7 +83,12 @@ def test_spotifyTrackParsing() -> None:
 
 def test_youtubeTrackParsing() -> None:
     """Test for parsing raw YouTube track"""
-    youtubeTrack = Track(**rawYoutubeTrack, spotifyArtistId=None)
+    youtubeTrack = Track(
+        **rawYoutubeTrack,
+        image=rawYoutubeTrack.get("thumbnails", [])
+        or rawYoutubeTrack.get("thumbnail", []),
+        spotifyArtistId=None,
+    )
 
     assert youtubeTrack.youtubeId == "TNPmfBrmlxc"
     assert youtubeTrack.title == "Big Big Sesh - Seshlehem"
@@ -86,6 +97,10 @@ def test_youtubeTrackParsing() -> None:
     assert youtubeTrack.firstArtistName == "Seshlehem"
     assert youtubeTrack.youtubeArtistId == ["UCGE1DCR_xJO5y72HWakqnbA"]
     assert youtubeTrack.duration == 182  # seconds
+    assert (
+        youtubeTrack.image
+        == "https://i.ytimg.com/vi/TNPmfBrmlxc/sddefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCghqEJQEGHgg6AJIWg&rs=AMzJL3kwV8omBUowoxPCapdQgV5NaXUg7w"
+    )
 
     assert not youtubeTrack.spotifyId
     assert not youtubeTrack.spotifyArtistId
