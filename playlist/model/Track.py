@@ -30,6 +30,18 @@ Duration = Annotated[
     ),
 ]
 
+Image = Annotated[
+    list,
+    AfterValidator(
+        lambda imageList: (
+            next(
+                x.get("url") or x.get("#text")
+                for x in sorted(imageList, key=lambda x: x.get("width", 0))
+            )
+        )
+    ),
+]
+
 
 class Track(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -67,6 +79,9 @@ class Track(BaseModel):
     # Spotify is matched manually, so defaults to `None`.
     spotifyId: str | None = Field(alias="id", default=None)
     spotifyArtistId: ArtistId | None = Field(alias="artists", default=None)
+
+    # Album image
+    image: Image | None = Field(default=None)
 
     @classmethod
     def from_dict(cls, rawObject: dict) -> "Track":

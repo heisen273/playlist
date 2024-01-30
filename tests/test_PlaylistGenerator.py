@@ -28,6 +28,7 @@ def test_getLastYoutubeTracks():
     assert track.duration
     assert track.youtubeId
     assert track.youtubeArtistId
+    assert track.image
 
     # Spotify values were not filled, because it's youtube-oriented method.
     assert not track.spotifyId
@@ -92,6 +93,7 @@ def test_spotifyRecommendations():
     assert recommendedTrack.title
     assert recommendedTrack.spotifyId
     assert recommendedTrack.spotifyArtistId
+    assert recommendedTrack.image
 
     assert not recommendedTrack.youtubeId
     assert not recommendedTrack.youtubeArtistId
@@ -115,6 +117,7 @@ def test_youtubeRecommendations() -> None:
     assert recommendedTrack.title
     assert recommendedTrack.youtubeId
     assert recommendedTrack.youtubeArtistId
+    assert recommendedTrack.image
 
     assert not recommendedTrack.spotifyId
     assert not recommendedTrack.spotifyArtistId
@@ -132,6 +135,7 @@ def test_getLastSpotifyTracks():
     assert track.duration
     assert track.spotifyId
     assert track.spotifyArtistId
+    assert track.image
 
     # Youtube values were not filled, because it's spotify-oriented method.
     assert not track.youtubeId
@@ -155,6 +159,7 @@ def test_lastFMRecommendations() -> None:
     recommendedTrack: Track = recommendations[0]
     assert recommendedTrack.artists
     assert recommendedTrack.title
+    assert recommendedTrack.image
 
     assert not recommendedTrack.spotifyId
     assert not recommendedTrack.spotifyArtistId
