@@ -6,7 +6,7 @@ except:
     from model import Platform
 
 # File-paths
-DEFAULT_PATH: str = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_PATH: str = os.path.dirname(os.path.realpath(__file__)).split("venv/")[0]
 DEFAULT_CONFIG_FILE = ".config.json"
 
 # Spotify
