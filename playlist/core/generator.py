@@ -20,7 +20,7 @@ from ytmusicapi import YTMusic
 # Models
 try:
     from playlist.model.Track import Track
-    from playlist.model.User import User
+    from playlist.model.User import User, Auth
     from playlist.model.Platform import Platform
     from playlist.constants import (
         SPOTIFY_SCOPES,
@@ -30,7 +30,7 @@ try:
         DEFAULT_TIMEOUT,
     )
 except ModuleNotFoundError:
-    from model import Track, User, Platform
+    from model import Track, User, Auth, Platform
     from constants import (
         SPOTIFY_SCOPES,
         MAX_SPOTIFY_PLAYLIST_CHUNK_SIZE,
@@ -73,11 +73,12 @@ class PlaylistGenerator:
             )
 
         # Init spotify.
-        cache = CacheFileHandler(cache_path=Platform.SPOTIFY.defaultConfigPath)
         if self.user.spotifyAuth:
             cache = MemoryCacheHandler(
                 token_info={**user.spotifyAuth, "scope": " ".join(SPOTIFY_SCOPES)}
             )
+        else:
+            cache = CacheFileHandler(cache_path=Platform.SPOTIFY.defaultConfigPath)
 
         self.spotify = spotipy.Spotify(
             auth_manager=SpotifyOAuth(
@@ -402,7 +403,7 @@ class PlaylistGenerator:
         self.fillYoutubeId(tracks=lastSpotifyTracks)
 
         lastYoutubeTracks: list[Track] = []
-        if self.user.youtubeAuth:
+        if self._isNotDummy(self.user.youtubeAuth):
             lastYoutubeTracks = self.getLastYoutubeTracks(lastN=lastN)
             self.fillSpotifyId(tracks=lastYoutubeTracks)
 
@@ -468,7 +469,7 @@ class PlaylistGenerator:
         self.fillSpotifyId(tracks=lastYoutubeTracks)
 
         lastSpotifyTracks: list[Track] = []
-        if self.user.spotifyAuth:
+        if self._isNotDummy(self.user.spotifyAuth):
             lastSpotifyTracks = self.getLastSpotifyTracks(lastN=lastN)
             self.fillYoutubeId(tracks=lastSpotifyTracks)
 
@@ -516,6 +517,18 @@ class PlaylistGenerator:
         )
 
         return f"https://music.youtube.com/playlist?list={playlistId}"
+
+    def _isNotDummy(self, auth: Auth | None) -> bool:
+        """
+        Helper to determine whether the `auth` is a dummy-one or not.
+        Dummy auth is used when user didn't auth'd himself, but we still need to query the platform for recommendations.
+        """
+        # Not authed at all -> fallback to `False`, i.e. 'it is a dummy auth'.
+        if not auth:
+            return False
+
+        # To determine whether it's a dummy auth or not, there's `.isDummy` property.
+        return not auth.isDummy
 
 
 if __name__ == "__main__":

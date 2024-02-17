@@ -1,5 +1,8 @@
+import pytest
+
 from playlist.core.generator import PlaylistGenerator
 from playlist.model.Track import Track
+from playlist.model.User import User, Auth
 
 rawTracks: list[dict] = [
     {
@@ -165,6 +168,21 @@ def test_lastFMRecommendations() -> None:
     assert not recommendedTrack.spotifyArtistId
     assert not recommendedTrack.youtubeId
     assert not recommendedTrack.youtubeArtistId
+
+
+@pytest.mark.parametrize(
+    "isDummy, expectedResult", [[True, False], [False, True], [None, False]]
+)
+def test__notDummyAuth(isDummy: bool, expectedResult: bool) -> None:
+    """Docstring for test_dummyAUth"""
+    user = User(
+        **{"spotify": Auth({"cool": "data", "1": 2, "3": 4, "isDummy": isDummy})}
+    )
+
+    if isDummy is None:
+        user.spotifyAuth = None
+
+    assert generator._isNotDummy(auth=user.spotifyAuth) == expectedResult
 
 
 def test_createYoutubePlaylist():
