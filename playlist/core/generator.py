@@ -15,7 +15,8 @@ from dotenv import load_dotenv
 import spotipy
 from spotipy import CacheFileHandler, MemoryCacheHandler
 from spotipy.oauth2 import SpotifyOAuth
-from ytmusicapi import YTMusic
+from ytmusicapi.ytmusic import YTMusic
+from ytmusicapi.auth.oauth import OAuthCredentials
 
 # Models
 try:
@@ -64,13 +65,15 @@ class PlaylistGenerator:
         self.user = user or User()
         # Init youtube.
         if self.user.youtubeAuth:
+            customOAuth = OAuthCredentials(
+                client_id=os.getenv("YOUTUBE_CLIENT_ID"),
+                client_secret=os.getenv("YOUTUBE_CLIENT_SECRET"),
+            )
             self.youtube: YTMusic = YTMusic(
-                auth=json.dumps(user.youtubeAuth), useCustomOauth=True
+                auth=user.youtubeAuth, oauth_credentials=customOAuth
             )
         else:
-            self.youtube: YTMusic = YTMusic(
-                auth=Platform.YOUTUBE.defaultConfigPath, useCustomOauth=False
-            )
+            self.youtube: YTMusic = YTMusic(auth=Platform.YOUTUBE.defaultConfigPath)
 
         # Init spotify.
         if self.user.spotifyAuth:
