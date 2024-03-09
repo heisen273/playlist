@@ -319,9 +319,13 @@ def test_UserFromDict():
         "username": "user_name",
         "messages": 10,
         "inProgress": False,
+        "youtube": {"myKey": "value"},
+        "spotify": {"myKey": "value"},
     }
     user = User.from_dict(userData)
     assert user.userId == "user123"
     assert user.userName == "user_name"
     assert user.messages == 10
+    assert user.spotifyAuth == {"myKey": "value"}
+    assert user.youtubeAuth == {"myKey": "value"}
     assert not user.inProgress
