@@ -30,8 +30,8 @@ class User(BaseModel):
     userName: str | None = Field(alias="username", default=None)
     messages: int | None = Field(alias="messages", default=0)
     inProgress: bool = Field(alias="inProgress", default=False)
-    spotifyAuth: Auth | None = Field(alias=Platform.SPOTIFY, default=None)
-    youtubeAuth: Auth | None = Field(alias=Platform.YOUTUBE, default=None)
+    spotifyAuth: Auth | dict | None = Field(alias=Platform.SPOTIFY, default=None)
+    youtubeAuth: Auth | dict | None = Field(alias=Platform.YOUTUBE, default=None)
     created: datetime | None = Field(alias="_created", default=datetime.now())
     updated: datetime | None = Field(alias="_updated", default=datetime.now())
 
