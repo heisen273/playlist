@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 try:
     from playlist.model.Platform import Platform
@@ -30,10 +30,30 @@ class User(BaseModel):
     userName: str | None = Field(alias="username", default=None)
     messages: int | None = Field(alias="messages", default=0)
     inProgress: bool = Field(alias="inProgress", default=False)
-    spotifyAuth: Auth | None = Field(alias=Platform.SPOTIFY, default=None)
-    youtubeAuth: Auth | None = Field(alias=Platform.YOUTUBE, default=None)
+    spotifyAuth: Auth | dict | None = Field(alias=Platform.SPOTIFY, default=None)
+    youtubeAuth: Auth | dict | None = Field(alias=Platform.YOUTUBE, default=None)
     created: datetime | None = Field(alias="_created", default=datetime.now())
     updated: datetime | None = Field(alias="_updated", default=datetime.now())
+
+    @field_validator("spotifyAuth", mode="before")
+    @classmethod
+    def preprocessSpotifyAuth(cls, v: dict | None) -> Auth | None:
+        """
+        Pre-process auth dict.
+        """
+        if v is None:
+            return v
+        return Auth(v)
+
+    @field_validator("youtubeAuth", mode="before")
+    @classmethod
+    def preprocessYoutubeAuth(cls, v: dict | None) -> Auth | None:
+        """
+        Pre-process auth dict.
+        """
+        if v is None:
+            return v
+        return Auth(v)
 
     @classmethod
     def from_dict(cls, rawObject: dict) -> "User":
