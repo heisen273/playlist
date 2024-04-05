@@ -175,9 +175,7 @@ def test_lastFMRecommendations() -> None:
 )
 def test__notDummyAuth(isDummy: bool, expectedResult: bool) -> None:
     """Docstring for test_dummyAUth"""
-    user = User(
-        **{"spotify": Auth({"cool": "data", "1": 2, "3": 4, "isDummy": isDummy})}
-    )
+    user = User(**{"spotify": {"cool": "data", "1": 2, "3": 4, "isDummy": isDummy}})
 
     if isDummy is None:
         user.spotifyAuth = None
