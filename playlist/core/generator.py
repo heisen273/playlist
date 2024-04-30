@@ -73,7 +73,11 @@ class PlaylistGenerator:
                 auth=user.youtubeAuth, oauth_credentials=customOAuth
             )
         else:
-            self.youtube: YTMusic = YTMusic(auth=Platform.YOUTUBE.defaultConfigPath)
+            myPath = Platform.YOUTUBE.defaultConfigPath
+            if "workspace" in myPath:
+                os.system(f"cp {myPath} {myPath.replace('workspace', 'tmp')}")
+                myPath = myPath.replace("workspace", "tmp")
+            self.youtube: YTMusic = YTMusic(auth=myPath)
 
         # Init spotify.
         if self.user.spotifyAuth:
@@ -81,7 +85,11 @@ class PlaylistGenerator:
                 token_info={**user.spotifyAuth, "scope": " ".join(SPOTIFY_SCOPES)}
             )
         else:
-            cache = CacheFileHandler(cache_path=Platform.SPOTIFY.defaultConfigPath)
+            myPath = Platform.SPOTIFY.defaultConfigPath
+            if "workspace" in myPath:
+                os.system(f"cp {myPath} {myPath.replace('workspace', 'tmp')}")
+                myPath = myPath.replace("workspace", "tmp")
+            cache = CacheFileHandler(cache_path=myPath)
 
         self.spotify = spotipy.Spotify(
             auth_manager=SpotifyOAuth(
